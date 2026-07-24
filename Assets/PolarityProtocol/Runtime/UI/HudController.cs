@@ -114,9 +114,9 @@ namespace PolarityProtocol.UI
             Health health = session.PlayerHealth;
             EncounterDirector director = session.Encounters;
 
-            Panel(new Rect(48f, 42f, 520f, 112f), 0.72f);
-            GUI.Label(new Rect(75f, 57f, 465f, 32f), director.CurrentTitle.ToUpperInvariant(), subtitle);
-            GUI.Label(new Rect(75f, 99f, 465f, 44f), director.CurrentObjective, small);
+            Panel(new Rect(48f, 42f, 570f, 130f), 0.72f);
+            GUI.Label(new Rect(75f, 52f, 515f, 52f), director.CurrentTitle.ToUpperInvariant(), subtitle);
+            GUI.Label(new Rect(75f, 110f, 515f, 48f), director.CurrentObjective, small);
 
             Panel(new Rect(48f, 910f, 570f, 120f), 0.76f);
             GUI.Label(new Rect(76f, 925f, 160f, 30f), "INTEGRITY", small);

@@ -12,6 +12,11 @@ namespace PolarityProtocol.Utilities
         public static Material Material(Color color, float emission = 0f, bool transparent = false)
         {
             Shader shader = Shader.Find(transparent ? "Sprites/Default" : "Standard");
+            if (shader == null && !transparent)
+            {
+                shader = Shader.Find("Legacy Shaders/Diffuse");
+            }
+
             if (shader == null)
             {
                 shader = Shader.Find("Hidden/InternalErrorShader");
@@ -110,4 +115,3 @@ namespace PolarityProtocol.Utilities
         }
     }
 }
-

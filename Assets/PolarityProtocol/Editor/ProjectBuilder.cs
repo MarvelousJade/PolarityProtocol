@@ -220,8 +220,60 @@ namespace PolarityProtocol.Editor
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);
             PlayerSettings.SetApiCompatibilityLevel(NamedBuildTarget.Standalone, ApiCompatibilityLevel.NET_Standard);
 
+            EnsureAlwaysIncludedShaders("Standard", "Sprites/Default", "Legacy Shaders/Diffuse");
             AddInputAxis("Right Stick Horizontal", 3, false);
             AddInputAxis("Right Stick Vertical", 4, true);
+        }
+
+        private static void EnsureAlwaysIncludedShaders(params string[] shaderNames)
+        {
+            UnityEngine.Object[] graphicsAssets =
+                AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset");
+            if (graphicsAssets.Length == 0)
+            {
+                Debug.LogWarning("Could not update the always-included shader list.");
+                return;
+            }
+
+            SerializedObject graphicsSettings = new(graphicsAssets[0]);
+            SerializedProperty includedShaders =
+                graphicsSettings.FindProperty("m_AlwaysIncludedShaders");
+            if (includedShaders == null)
+            {
+                Debug.LogWarning("GraphicsSettings does not expose m_AlwaysIncludedShaders.");
+                return;
+            }
+
+            for (int shaderIndex = 0; shaderIndex < shaderNames.Length; shaderIndex++)
+            {
+                Shader shader = Shader.Find(shaderNames[shaderIndex]);
+                if (shader == null)
+                {
+                    Debug.LogWarning($"Required shader '{shaderNames[shaderIndex]}' was not found.");
+                    continue;
+                }
+
+                bool alreadyIncluded = false;
+                for (int includedIndex = 0; includedIndex < includedShaders.arraySize; includedIndex++)
+                {
+                    if (includedShaders.GetArrayElementAtIndex(includedIndex).objectReferenceValue == shader)
+                    {
+                        alreadyIncluded = true;
+                        break;
+                    }
+                }
+
+                if (alreadyIncluded)
+                {
+                    continue;
+                }
+
+                includedShaders.InsertArrayElementAtIndex(includedShaders.arraySize);
+                includedShaders.GetArrayElementAtIndex(includedShaders.arraySize - 1)
+                    .objectReferenceValue = shader;
+            }
+
+            graphicsSettings.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void AddInputAxis(string axisName, int axisNumber, bool invert)

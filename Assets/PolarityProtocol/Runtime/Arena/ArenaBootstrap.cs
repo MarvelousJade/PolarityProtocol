@@ -72,6 +72,15 @@ namespace PolarityProtocol.Arena
             {
                 systems.AddComponent<PerformanceProbe>();
             }
+
+            bool captureRequested = Environment.GetCommandLineArgs().Any(
+                argument => argument.Equals(
+                    "-polarity-capture",
+                    StringComparison.OrdinalIgnoreCase));
+            if (captureRequested)
+            {
+                systems.AddComponent<VisualCaptureProbe>();
+            }
         }
 
         private void CreateArena()

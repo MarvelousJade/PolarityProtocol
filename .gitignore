@@ -1,0 +1,35 @@
+# Unity-generated
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# IDEs
+.vs/
+.idea/
+.vscode/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+
+# OS and crash output
+.DS_Store
+Thumbs.db
+sysinfo.txt
+crashlytics-build.properties
+
+# Builds are reproducible through Tools > Polarity Protocol > Build Demo
+*.apk
+*.aab
+*.unitypackage
+

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e76e050a6860fb4bbf9437417a3a146, type: 3}
+  m_Name: 02_Redirect
+  m_EditorClassIdentifier: PolarityProtocol.Runtime::PolarityProtocol.Data.EncounterDefinition
+  displayName: ENCOUNTER 02 // REDIRECT
+  objective: Curve violet projectiles through an anchor field and return them to
+    a robot.
+  spawns:
+  - archetype: 1
+    position: {x: -12, y: 1, z: 9}
+  - archetype: 1
+    position: {x: 12, y: 1, z: 7}
+  - archetype: 0
+    position: {x: 1, y: 1, z: 8}

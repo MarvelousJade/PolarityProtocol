@@ -15,12 +15,14 @@
 .vscode/
 *.csproj
 *.sln
+*.slnx
 *.suo
 *.user
 *.userprefs
 *.pidb
 *.booproj
 *.svd
+.vsconfig
 
 # OS and crash output
 .DS_Store
@@ -32,4 +34,3 @@ crashlytics-build.properties
 *.apk
 *.aab
 *.unitypackage
-

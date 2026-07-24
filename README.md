@@ -1,6 +1,155 @@
 # Polarity Protocol
 
-Polarity Protocol is a compact third-person Unity combat demo built around placing pull and push anchors to reposition robots, redirect projectiles, and weaponize arena hazards.
+Polarity Protocol is a compact third-person Unity combat demo where two magnetic anchor polarities pull or push robots, physics props, and hostile projectiles through a neon containment arena.
 
-The project targets Unity `6000.4.11f1`. Open it in Unity and use **Tools → Polarity Protocol → Build Demo Project** to generate the playable scene and data assets.
+Built with Unity `6000.4.11f1` and C#. The playable Windows development build is generated at `Builds/Windows/PolarityProtocol.exe`.
+
+## Gameplay at a glance
+
+- Place up to two persistent magnetic anchors on arena surfaces.
+- Use a negative anchor to **pull** positive magnetic targets.
+- Use a positive anchor to **push** positive magnetic targets.
+- Redirect shooter projectiles by bending them through a player-owned field.
+- Displace shield units to expose them for three seconds.
+- Push enemies into pulsing plasma hazards.
+- Clear three escalating encounters and earn a score based on time, damage, and redirections.
+
+The demo has an intro screen, tutorial objectives, pause/restart flow, failure recovery, completion scoring, camera shake, hit stop, synthesized feedback audio, and a runtime diagnostics mode.
+
+## Controls
+
+| Action | Keyboard and mouse | Xbox-style controller |
+|---|---|---|
+| Move | `WASD` | Left stick |
+| Aim / orbit | Mouse | Right stick |
+| Fire | Left mouse | `RB` or `A` |
+| Place anchor | Right mouse | `LB` |
+| Toggle pull/push | `Q` | `X` |
+| Recall anchors | `R` | `Y` |
+| Dash | `Space` | `B` |
+| Sprint | `Shift` | Left stick press |
+| Pause | `Esc` | Menu |
+| Diagnostics | `F3` | Keyboard only |
+
+## Technical features
+
+- Analytic, unit-tested magnetic force solver with distance falloff and minimum-distance stabilization
+- Non-allocating `Physics.OverlapSphereNonAlloc` field queries
+- Data-driven ability, enemy, and encounter definitions using ScriptableObjects
+- Three enemy decision models: chaser, ranged spacing, and directional shield
+- Standardized damage messages and faction-aware redirectable projectiles
+- Generic component pool used by the projectile pool
+- Procedurally assembled arena and presentation; no marketplace gameplay packages
+- Camera-relative movement, orbit/collision camera, dash, mouse, keyboard, and controller input
+- Runtime force vectors, AI states, targeting ranges, active counts, and frame-rate diagnostics
+- Encounter authoring window with draggable spawn handles, range preview, and bounds/separation validation
+- Dedicated stress scene and packaged-player benchmark mode
+- Six Edit Mode tests and three Play Mode tests
+
+## Project layout
+
+```text
+Assets/PolarityProtocol/
+├── Editor/                    # Project builder and encounter authoring tool
+├── Resources/Data/            # Generated ScriptableObject tuning assets
+├── Runtime/
+│   ├── Abilities/
+│   ├── AI/
+│   ├── Arena/
+│   ├── Combat/
+│   ├── Data/
+│   ├── Encounters/
+│   ├── Magnetics/
+│   ├── Player/
+│   ├── Pooling/
+│   ├── UI/
+│   └── Utilities/
+├── Scenes/
+│   ├── PolarityProtocolDemo.unity
+│   └── PolarityProtocolStress.unity
+└── Tests/
+    ├── EditMode/
+    └── PlayMode/
+```
+
+See [Architecture](docs/ARCHITECTURE.md) for system boundaries and data flow.
+
+## Open and play
+
+1. Open the repository folder in Unity Hub with Unity `6000.4.11f1`.
+2. Open `Assets/PolarityProtocol/Scenes/PolarityProtocolDemo.unity`.
+3. Press Play.
+
+The checked-in scene is intentionally small. `ArenaBootstrap` builds the authored graybox arena and connects runtime systems, while persistent tuning lives in ScriptableObject assets.
+
+## Rebuild content and executable
+
+Inside Unity:
+
+1. Use **Tools → Polarity Protocol → Build Demo Project** to regenerate data and both scenes.
+2. Use **Tools → Polarity Protocol → Build Windows Player** to create the executable.
+3. Use **Tools → Polarity Protocol → Encounter Authoring** to edit and validate encounter layouts.
+
+For CI or a local PowerShell terminal:
+
+```powershell
+& 'C:\Program Files\Unity\Hub\Editor\6000.4.11f1\Editor\Unity.exe' `
+  -batchmode -quit `
+  -projectPath 'G:\C++ PROJECTS\PolarityProtocol' `
+  -executeMethod PolarityProtocol.Editor.ProjectBuilder.BuildWindowsPlayer `
+  -logFile 'G:\C++ PROJECTS\PolarityProtocol\Logs\windows-build.log'
+```
+
+Build output is ignored by Git because Unity players are large and fully reproducible.
+
+## Tests
+
+Run the suites from Unity Test Runner, or use:
+
+```powershell
+& 'C:\Program Files\Unity\Hub\Editor\6000.4.11f1\Editor\Unity.exe' `
+  -batchmode -projectPath 'G:\C++ PROJECTS\PolarityProtocol' `
+  -runTests -testPlatform EditMode `
+  -testResults 'G:\C++ PROJECTS\PolarityProtocol\Logs\editmode-results.xml'
+
+& 'C:\Program Files\Unity\Hub\Editor\6000.4.11f1\Editor\Unity.exe' `
+  -batchmode -projectPath 'G:\C++ PROJECTS\PolarityProtocol' `
+  -runTests -testPlatform PlayMode `
+  -testResults 'G:\C++ PROJECTS\PolarityProtocol\Logs\playmode-results.xml'
+```
+
+Verified locally:
+
+- Edit Mode: **6/6 passed**
+- Play Mode: **3/3 passed**
+- Windows x64 development player: **build succeeded**
+- Packaged-player smoke run: **no runtime exceptions**
+
+## Performance
+
+The reproducible stress workload adds 18 robots and 120 projectiles to the opening encounter. On an AMD Ryzen 5 3600, Radeon RX 5700, and 16 GB RAM at 1280×720:
+
+- 21 peak enemies
+- 120 peak projectiles
+- 117.2 average FPS / 8.53 ms average frame
+- 8.75 ms sampled main-thread time
+- 143.2 MB sampled used memory
+- Gen-0 collections reduced from 17 to 4 after pooling synthesized feedback clips and removing diagnostic array queries
+
+Full methodology and caveats are in [Performance](docs/PERFORMANCE.md).
+
+## Known limitations
+
+- Presentation is intentionally procedural: primitive models, generated materials, simple robot motion, and synthesized tones.
+- Enemy navigation uses local steering and arena collision rather than a baked NavMesh.
+- The legacy input map targets Xbox-style Windows controllers; unusual controller layouts may need axis remapping.
+- The development build prioritizes inspection over distribution size and is approximately 140.8 MiB.
+- No gameplay video or GIF is checked in yet.
+- The batch benchmark could not retrieve the draw-call counter on this Unity/player configuration; the report marks it unavailable rather than presenting zero as a real count.
+
+## Credits, licensing, and contribution scope
+
+All gameplay code, tests, editor tooling, procedural geometry, materials, UI, and synthesized audio in this repository were created specifically for this demo. No external art, audio, animation, or gameplay packages are included. Unity primitive meshes, built-in shaders, default font resources, engine binaries, and the Unity Test Framework remain subject to their respective Unity terms.
+
+See [Third-party notices](THIRD_PARTY_NOTICES.md).
 

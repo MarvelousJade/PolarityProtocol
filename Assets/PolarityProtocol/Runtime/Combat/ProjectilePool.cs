@@ -64,6 +64,16 @@ namespace PolarityProtocol.Combat
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             body.interpolation = RigidbodyInterpolation.Interpolate;
 
+            TrailRenderer trail = projectileObject.AddComponent<TrailRenderer>();
+            trail.time = 0.32f;
+            trail.minVertexDistance = 0.04f;
+            trail.startWidth = 0.28f;
+            trail.endWidth = 0.015f;
+            trail.numCornerVertices = 3;
+            trail.numCapVertices = 3;
+            trail.alignment = LineAlignment.View;
+            trail.sharedMaterial = RuntimeArt.Material(Color.white, 1f, true);
+
             MagneticTarget target = projectileObject.AddComponent<MagneticTarget>();
             target.Configure(MagneticPolarity.Positive, 2.2f);
 

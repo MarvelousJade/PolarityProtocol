@@ -19,6 +19,7 @@ namespace PolarityProtocol.Player
         private Vector3 horizontalVelocity;
         private Vector3 verticalVelocity;
         private Vector3 dashDirection;
+        private TrailRenderer dashTrail;
         private float dashRemaining;
         private float dashCooldownRemaining;
         private Vector3 spawnPoint;
@@ -31,6 +32,15 @@ namespace PolarityProtocol.Player
         {
             controller = GetComponent<CharacterController>();
             spawnPoint = transform.position;
+        }
+
+        private void Start()
+        {
+            dashTrail = GetComponentInChildren<TrailRenderer>();
+            if (dashTrail != null)
+            {
+                dashTrail.emitting = false;
+            }
         }
 
         private void Update()
@@ -76,6 +86,11 @@ namespace PolarityProtocol.Player
                     acceleration * Time.deltaTime);
             }
 
+            if (dashTrail != null)
+            {
+                dashTrail.emitting = dashRemaining > 0f;
+            }
+
             if (desiredDirection.sqrMagnitude > 0.05f)
             {
                 Quaternion desiredRotation = Quaternion.LookRotation(desiredDirection, Vector3.up);
@@ -112,4 +127,3 @@ namespace PolarityProtocol.Player
         }
     }
 }
-

@@ -8,6 +8,8 @@ namespace PolarityProtocol.Utilities
         public static readonly Color Push = new(1f, 0.25f, 0.37f);
         public static readonly Color Gold = new(1f, 0.78f, 0.25f);
         public static readonly Color Dark = new(0.025f, 0.045f, 0.07f);
+        public static readonly Color Steel = new(0.12f, 0.2f, 0.26f);
+        public static readonly Color Slate = new(0.055f, 0.085f, 0.12f);
 
         public static Material Material(Color color, float emission = 0f, bool transparent = false)
         {
@@ -26,6 +28,16 @@ namespace PolarityProtocol.Utilities
             {
                 color = color
             };
+
+            if (!transparent && material.HasProperty("_Metallic"))
+            {
+                material.SetFloat("_Metallic", emission > 0f ? 0.32f : 0.18f);
+            }
+
+            if (!transparent && material.HasProperty("_Glossiness"))
+            {
+                material.SetFloat("_Glossiness", emission > 0f ? 0.72f : 0.48f);
+            }
 
             if (emission > 0f && material.HasProperty("_EmissionColor"))
             {

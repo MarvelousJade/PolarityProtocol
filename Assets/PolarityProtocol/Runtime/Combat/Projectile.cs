@@ -10,6 +10,7 @@ namespace PolarityProtocol.Combat
         private Rigidbody body;
         private Renderer visual;
         private Material visualMaterial;
+        private TrailRenderer trail;
         private ProjectilePool pool;
         private GameObject owner;
         private CombatFaction faction;
@@ -26,6 +27,7 @@ namespace PolarityProtocol.Combat
             body = GetComponent<Rigidbody>();
             visual = GetComponent<Renderer>();
             visualMaterial = visual == null ? null : visual.material;
+            trail = GetComponent<TrailRenderer>();
         }
 
         private void Update()
@@ -97,6 +99,7 @@ namespace PolarityProtocol.Combat
             transform.forward = velocity.sqrMagnitude > 0.01f ? velocity.normalized : Vector3.forward;
             body.linearVelocity = velocity;
             body.angularVelocity = Vector3.zero;
+            trail?.Clear();
 
             SetVisualColor(color, 2.5f);
         }
@@ -131,6 +134,12 @@ namespace PolarityProtocol.Combat
                 visualMaterial.EnableKeyword("_EMISSION");
                 visualMaterial.SetColor("_EmissionColor", color * emission);
             }
+
+            if (trail != null)
+            {
+                trail.startColor = new Color(color.r, color.g, color.b, 0.92f);
+                trail.endColor = new Color(color.r, color.g, color.b, 0f);
+            }
         }
 
         public void Release()
@@ -142,6 +151,7 @@ namespace PolarityProtocol.Combat
 
             released = true;
             body.linearVelocity = Vector3.zero;
+            trail?.Clear();
             pool?.Release(this);
         }
     }

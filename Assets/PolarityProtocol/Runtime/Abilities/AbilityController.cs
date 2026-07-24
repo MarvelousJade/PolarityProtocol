@@ -189,15 +189,16 @@ namespace PolarityProtocol.Abilities
             Color stateColor = cooldownRemaining <= 0f && Energy >= definition.EnergyCost
                 ? polarityColor
                 : Color.gray;
-            Color previewColor = new(stateColor.r, stateColor.g, stateColor.b, 0.55f);
+            Color previewColor = new(stateColor.r, stateColor.g, stateColor.b, 0.32f);
             previewMaterial.color = previewColor;
             if (previewMaterial.HasProperty("_EmissionColor"))
             {
                 previewMaterial.EnableKeyword("_EMISSION");
                 previewMaterial.SetColor("_EmissionColor", stateColor * 1.2f);
             }
-            previewRing.startColor = stateColor;
-            previewRing.endColor = stateColor;
+            Color ringColor = new(stateColor.r, stateColor.g, stateColor.b, 0.34f);
+            previewRing.startColor = ringColor;
+            previewRing.endColor = ringColor;
         }
 
         private void BuildPlacementPreview()
@@ -217,7 +218,7 @@ namespace PolarityProtocol.Abilities
                 placementPreview.transform,
                 definition == null ? 7.5f : definition.Radius,
                 RuntimeArt.Pull,
-                0.035f,
+                0.022f,
                 64);
             placementPreview.SetActive(false);
         }

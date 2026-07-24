@@ -11,6 +11,7 @@ namespace PolarityProtocol.Player
         [SerializeField] private float sensitivity = 2.4f;
         [SerializeField] private float smoothing = 14f;
         [SerializeField] private float collisionRadius = 0.25f;
+        [SerializeField] private float shoulderOffset = 0.85f;
 
         private Transform target;
         private float yaw;
@@ -56,12 +57,14 @@ namespace PolarityProtocol.Player
 
             Quaternion orbit = Quaternion.Euler(pitch, yaw, 0f);
             Vector3 focus = target.position + Vector3.up * height;
-            Vector3 desired = focus - orbit * Vector3.forward * distance;
-            Vector3 castDirection = desired - focus;
+            Vector3 shoulder = orbit * Vector3.right * shoulderOffset;
+            Vector3 lookTarget = focus + shoulder * 0.38f;
+            Vector3 desired = focus + shoulder - orbit * Vector3.forward * distance;
+            Vector3 castDirection = desired - lookTarget;
             float castDistance = castDirection.magnitude;
 
             if (Physics.SphereCast(
-                    focus,
+                    lookTarget,
                     collisionRadius,
                     castDirection.normalized,
                     out RaycastHit hit,
@@ -70,7 +73,7 @@ namespace PolarityProtocol.Player
                     QueryTriggerInteraction.Ignore) &&
                 hit.transform.root != target.root)
             {
-                desired = focus + castDirection.normalized * Mathf.Max(1.2f, hit.distance - 0.25f);
+                desired = lookTarget + castDirection.normalized * Mathf.Max(1.2f, hit.distance - 0.25f);
             }
 
             trauma = Mathf.Max(0f, trauma - Time.deltaTime * 1.5f);
@@ -86,7 +89,7 @@ namespace PolarityProtocol.Player
                 desired,
                 ref smoothVelocity,
                 1f / Mathf.Max(1f, smoothing));
-            transform.rotation = Quaternion.LookRotation(focus - transform.position, Vector3.up);
+            transform.rotation = Quaternion.LookRotation(lookTarget - transform.position, Vector3.up);
         }
 
         public void Follow(Transform followTarget)
@@ -102,4 +105,3 @@ namespace PolarityProtocol.Player
         }
     }
 }
-

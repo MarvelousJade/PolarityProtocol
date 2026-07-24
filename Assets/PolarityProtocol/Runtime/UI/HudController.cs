@@ -27,12 +27,36 @@ namespace PolarityProtocol.UI
         private GUIStyle button;
         private GUIStyle center;
         private bool stylesReady;
+        private float damageFlash;
 
         public void Configure(GameSession gameSession, AbilityController playerAbility, PlayerMotor playerMotor)
         {
+            if (session != null && session.PlayerHealth != null)
+            {
+                session.PlayerHealth.Damaged -= OnPlayerDamaged;
+            }
+
             session = gameSession;
             ability = playerAbility;
             motor = playerMotor;
+
+            if (session.PlayerHealth != null)
+            {
+                session.PlayerHealth.Damaged += OnPlayerDamaged;
+            }
+        }
+
+        private void Update()
+        {
+            damageFlash = Mathf.MoveTowards(damageFlash, 0f, Time.unscaledDeltaTime * 2.4f);
+        }
+
+        private void OnDestroy()
+        {
+            if (session != null && session.PlayerHealth != null)
+            {
+                session.PlayerHealth.Damaged -= OnPlayerDamaged;
+            }
         }
 
         private void OnGUI()
@@ -114,6 +138,8 @@ namespace PolarityProtocol.UI
             Health health = session.PlayerHealth;
             EncounterDirector director = session.Encounters;
 
+            DrawDamageVignette();
+
             Panel(new Rect(48f, 42f, 570f, 130f), 0.72f);
             GUI.Label(new Rect(75f, 52f, 515f, 52f), director.CurrentTitle.ToUpperInvariant(), subtitle);
             GUI.Label(new Rect(75f, 110f, 515f, 48f), director.CurrentObjective, small);
@@ -149,8 +175,11 @@ namespace PolarityProtocol.UI
                 center);
 
             Color crosshairColor = polarityColor;
-            Fill(new Rect(952f, 532f, 16f, 3f), crosshairColor);
-            Fill(new Rect(958f, 526f, 3f, 16f), crosshairColor);
+            Fill(new Rect(938f, 538f, 12f, 2f), crosshairColor);
+            Fill(new Rect(970f, 538f, 12f, 2f), crosshairColor);
+            Fill(new Rect(959f, 517f, 2f, 12f), crosshairColor);
+            Fill(new Rect(959f, 549f, 2f, 12f), crosshairColor);
+            Fill(new Rect(957f, 536f, 6f, 6f), Color.white);
 
             GUI.Label(
                 new Rect(725f, 1025f, 470f, 28f),
@@ -161,6 +190,26 @@ namespace PolarityProtocol.UI
             {
                 DrawDebug();
             }
+        }
+
+        private void DrawDamageVignette()
+        {
+            if (damageFlash <= 0f)
+            {
+                return;
+            }
+
+            Color color = new Color(RuntimeArt.Push.r, RuntimeArt.Push.g, RuntimeArt.Push.b, damageFlash * 0.42f);
+            const float edge = 115f;
+            Fill(new Rect(0f, 0f, ReferenceWidth, edge), color);
+            Fill(new Rect(0f, ReferenceHeight - edge, ReferenceWidth, edge), color);
+            Fill(new Rect(0f, edge, edge, ReferenceHeight - edge * 2f), color);
+            Fill(new Rect(ReferenceWidth - edge, edge, edge, ReferenceHeight - edge * 2f), color);
+        }
+
+        private void OnPlayerDamaged(DamageInfo damage, float amount)
+        {
+            damageFlash = Mathf.Clamp01(damageFlash + amount / 45f);
         }
 
         private void DrawDebug()

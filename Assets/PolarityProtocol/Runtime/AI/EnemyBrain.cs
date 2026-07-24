@@ -30,8 +30,13 @@ namespace PolarityProtocol.AI
         private Renderer[] renderers;
         private Material[] bodyMaterials;
         private Color baseColor;
+        private Transform modelRoot;
+        private Vector3 modelBasePosition;
         private Transform shieldVisual;
         private Material shieldMaterial;
+        private Transform healthBarRoot;
+        private Transform healthFill;
+        private LineRenderer aimLine;
         private TextMesh debugLabel;
         private LineRenderer attackRangeRing;
         private LineRenderer perceptionRing;
@@ -148,10 +153,14 @@ namespace PolarityProtocol.AI
             EnemyDefinition enemyDefinition,
             Transform player,
             Renderer[] enemyRenderers,
+            Transform enemyModel,
             Transform shield,
+            Transform barRoot,
+            Transform barFill,
             TextMesh label,
             LineRenderer attackRing,
-            LineRenderer sightRing)
+            LineRenderer sightRing,
+            LineRenderer telegraphLine)
         {
             definition = enemyDefinition;
             target = player;
@@ -161,11 +170,16 @@ namespace PolarityProtocol.AI
             {
                 bodyMaterials[i] = renderers[i] == null ? null : renderers[i].material;
             }
+            modelRoot = enemyModel;
+            modelBasePosition = enemyModel == null ? Vector3.zero : enemyModel.localPosition;
             shieldVisual = shield;
             shieldMaterial = shieldVisual == null ? null : shieldVisual.GetComponent<Renderer>().material;
+            healthBarRoot = barRoot;
+            healthFill = barFill;
             debugLabel = label;
             attackRangeRing = attackRing;
             perceptionRing = sightRing;
+            aimLine = telegraphLine;
             baseColor = definition.Accent;
             health.Configure(definition.MaximumHealth, CombatFaction.Enemy);
             health.Damaged += OnDamaged;
@@ -326,6 +340,24 @@ namespace PolarityProtocol.AI
 
         private void UpdatePresentation()
         {
+            if (modelRoot != null && !health.IsDead)
+            {
+                Vector3 localVelocity = transform.InverseTransformDirection(body.linearVelocity);
+                float bob = Mathf.Sin(Time.time * 5f + GetEntityId().GetHashCode() * 0.01f) * 0.045f;
+                modelRoot.localPosition = Vector3.Lerp(
+                    modelRoot.localPosition,
+                    modelBasePosition + Vector3.up * bob,
+                    1f - Mathf.Exp(-12f * Time.deltaTime));
+                Quaternion lean = Quaternion.Euler(
+                    Mathf.Clamp(localVelocity.z * 0.65f, -6f, 6f),
+                    0f,
+                    Mathf.Clamp(-localVelocity.x * 1.4f, -10f, 10f));
+                modelRoot.localRotation = Quaternion.Slerp(
+                    modelRoot.localRotation,
+                    lean,
+                    1f - Mathf.Exp(-9f * Time.deltaTime));
+            }
+
             Color displayColor = baseColor;
             if (Time.time < flashEndsAt)
             {
@@ -365,6 +397,39 @@ namespace PolarityProtocol.AI
                     ShieldExposed ? 75f + Mathf.Sin(Time.time * 5f) * 8f : 0f);
             }
 
+            if (healthBarRoot != null)
+            {
+                healthBarRoot.gameObject.SetActive(!health.IsDead);
+                if (Camera.main != null)
+                {
+                    healthBarRoot.rotation = Camera.main.transform.rotation;
+                }
+            }
+
+            if (healthFill != null)
+            {
+                float normalized = Mathf.Clamp01(health.Normalized);
+                Vector3 scale = healthFill.localScale;
+                scale.x = 1.08f * normalized;
+                healthFill.localScale = scale;
+                healthFill.localPosition = new Vector3(-0.54f * (1f - normalized), 0f, -0.025f);
+            }
+
+            bool telegraphing = State == EnemyState.Telegraphing;
+            if (aimLine != null)
+            {
+                aimLine.gameObject.SetActive(telegraphing && target != null);
+                if (telegraphing && target != null)
+                {
+                    float alpha = 0.35f + (Mathf.Sin(Time.time * 20f) + 1f) * 0.22f;
+                    Color aimColor = new(baseColor.r, baseColor.g, baseColor.b, alpha);
+                    aimLine.startColor = aimColor;
+                    aimLine.endColor = new Color(baseColor.r, baseColor.g, baseColor.b, 0.05f);
+                    aimLine.SetPosition(0, transform.position + Vector3.up * 1.35f + transform.forward * 0.65f);
+                    aimLine.SetPosition(1, target.position + Vector3.up);
+                }
+            }
+
             bool showDebug = DebugOverlay.Enabled;
             if (debugLabel != null)
             {
@@ -382,7 +447,12 @@ namespace PolarityProtocol.AI
 
             if (attackRangeRing != null)
             {
-                attackRangeRing.gameObject.SetActive(showDebug);
+                attackRangeRing.gameObject.SetActive(showDebug || telegraphing);
+                Color ringColor = telegraphing
+                    ? new Color(baseColor.r, baseColor.g, baseColor.b, 0.65f)
+                    : new Color(RuntimeArt.Push.r, RuntimeArt.Push.g, RuntimeArt.Push.b, 0.35f);
+                attackRangeRing.startColor = ringColor;
+                attackRangeRing.endColor = ringColor;
             }
 
             if (perceptionRing != null)

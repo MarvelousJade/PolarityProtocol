@@ -123,6 +123,7 @@ namespace PolarityProtocol.Arena
             CreateWall("South Wall", new Vector3(0f, 2f, -16f), new Vector3(36f, 4f, 0.7f));
             CreateWall("East Wall", new Vector3(18f, 2f, 0f), new Vector3(0.7f, 4f, 32f));
             CreateWall("West Wall", new Vector3(-18f, 2f, 0f), new Vector3(0.7f, 4f, 32f));
+            CreateArenaAccents();
 
             CreateHazard(new Vector3(-10.5f, 0f, 2.5f), new Vector3(5.5f, 0.35f, 5.5f));
             CreateHazard(new Vector3(10.5f, 0f, 8f), new Vector3(4.2f, 0.35f, 4.2f));
@@ -179,32 +180,124 @@ namespace PolarityProtocol.Arena
             model.SetParent(player.transform, false);
             RuntimeArt.Primitive(
                 PrimitiveType.Capsule,
-                "Suit",
+                "Armoured Torso",
                 model,
-                new Vector3(0f, 1.05f, 0f),
-                new Vector3(0.82f, 1.05f, 0.82f),
-                new Color(0.72f, 0.82f, 0.86f),
+                new Vector3(0f, 1.12f, 0f),
+                new Vector3(0.66f, 0.72f, 0.54f),
+                new Color(0.48f, 0.62f, 0.7f),
                 false,
                 0.1f);
+            RuntimeArt.Primitive(
+                PrimitiveType.Sphere,
+                "Helmet",
+                model,
+                new Vector3(0f, 1.83f, 0f),
+                new Vector3(0.58f, 0.52f, 0.55f),
+                new Color(0.62f, 0.76f, 0.82f),
+                false,
+                0.12f);
             RuntimeArt.Primitive(
                 PrimitiveType.Cube,
                 "Visor",
                 model,
-                new Vector3(0f, 1.55f, 0.43f),
-                new Vector3(0.62f, 0.25f, 0.09f),
+                new Vector3(0f, 1.84f, 0.49f),
+                new Vector3(0.68f, 0.16f, 0.07f),
                 RuntimeArt.Pull,
                 false,
                 2.4f);
             RuntimeArt.Primitive(
+                PrimitiveType.Cube,
+                "Hip Plate",
+                model,
+                new Vector3(0f, 0.58f, 0f),
+                new Vector3(0.62f, 0.25f, 0.46f),
+                RuntimeArt.Steel,
+                false);
+
+            for (int side = -1; side <= 1; side += 2)
+            {
+                RuntimeArt.Primitive(
+                    PrimitiveType.Cylinder,
+                    side < 0 ? "Left Leg" : "Right Leg",
+                    model,
+                    new Vector3(side * 0.23f, 0.27f, 0f),
+                    new Vector3(0.18f, 0.35f, 0.18f),
+                    new Color(0.32f, 0.46f, 0.54f),
+                    false);
+                RuntimeArt.Primitive(
+                    PrimitiveType.Cube,
+                    side < 0 ? "Left Boot" : "Right Boot",
+                    model,
+                    new Vector3(side * 0.23f, 0.06f, 0.11f),
+                    new Vector3(0.25f, 0.17f, 0.42f),
+                    RuntimeArt.Slate,
+                    false);
+                RuntimeArt.Primitive(
+                    PrimitiveType.Cube,
+                    side < 0 ? "Left Shoulder" : "Right Shoulder",
+                    model,
+                    new Vector3(side * 0.53f, 1.33f, 0f),
+                    new Vector3(0.28f, 0.3f, 0.44f),
+                    side < 0 ? RuntimeArt.Pull : RuntimeArt.Push,
+                    false,
+                    0.7f);
+            }
+
+            GameObject cannon = RuntimeArt.Primitive(
+                PrimitiveType.Cylinder,
+                "Anchor Projector",
+                model,
+                new Vector3(0.58f, 1.02f, 0.24f),
+                new Vector3(0.18f, 0.34f, 0.18f),
+                RuntimeArt.Push,
+                false,
+                1.3f);
+            cannon.transform.localEulerAngles = new Vector3(90f, 0f, 0f);
+
+            GameObject fieldPack = RuntimeArt.Primitive(
                 PrimitiveType.Cylinder,
                 "Field Pack",
                 model,
-                new Vector3(0f, 1.15f, -0.52f),
-                new Vector3(0.38f, 0.48f, 0.38f),
+                new Vector3(0f, 1.12f, -0.53f),
+                new Vector3(0.34f, 0.34f, 0.34f),
+                RuntimeArt.Slate,
+                false,
+                0.2f);
+            fieldPack.transform.localEulerAngles = new Vector3(90f, 0f, 0f);
+
+            GameObject fieldCoil = RuntimeArt.Primitive(
+                PrimitiveType.Cylinder,
+                "Rotating Field Coil",
+                model,
+                new Vector3(0f, 1.12f, -0.72f),
+                new Vector3(0.47f, 0.045f, 0.47f),
+                RuntimeArt.Pull,
+                false,
+                2.2f);
+            fieldCoil.transform.localEulerAngles = new Vector3(90f, 0f, 0f);
+            RuntimeArt.Primitive(
+                PrimitiveType.Cube,
+                "Coil Index",
+                fieldCoil.transform,
+                new Vector3(0f, 0.2f, 0f),
+                new Vector3(0.12f, 0.45f, 0.06f),
                 RuntimeArt.Push,
                 false,
-                1.3f).transform.localEulerAngles = new Vector3(90f, 0f, 0f);
+                2f);
 
+            TrailRenderer dashTrail = fieldPack.AddComponent<TrailRenderer>();
+            dashTrail.time = 0.24f;
+            dashTrail.minVertexDistance = 0.06f;
+            dashTrail.startWidth = 0.75f;
+            dashTrail.endWidth = 0.05f;
+            dashTrail.numCornerVertices = 3;
+            dashTrail.sharedMaterial = RuntimeArt.Material(RuntimeArt.Pull, 1f, true);
+            dashTrail.startColor = new Color(RuntimeArt.Pull.r, RuntimeArt.Pull.g, RuntimeArt.Pull.b, 0.55f);
+            dashTrail.endColor = new Color(RuntimeArt.Push.r, RuntimeArt.Push.g, RuntimeArt.Push.b, 0f);
+            dashTrail.emitting = false;
+
+            PlayerPresentation presentation = player.AddComponent<PlayerPresentation>();
+            presentation.Configure(model, fieldCoil.transform);
             _ = motor;
             return player;
         }
@@ -262,6 +355,83 @@ namespace PolarityProtocol.Arena
                 position,
                 scale,
                 new Color(0.035f, 0.065f, 0.09f));
+        }
+
+        private void CreateArenaAccents()
+        {
+            RuntimeArt.Primitive(
+                PrimitiveType.Cube,
+                "North Cyan Rail",
+                arenaRoot,
+                new Vector3(-8.7f, 3.35f, 15.58f),
+                new Vector3(17f, 0.08f, 0.09f),
+                RuntimeArt.Pull,
+                false,
+                2.4f);
+            RuntimeArt.Primitive(
+                PrimitiveType.Cube,
+                "North Red Rail",
+                arenaRoot,
+                new Vector3(8.7f, 3.35f, 15.58f),
+                new Vector3(17f, 0.08f, 0.09f),
+                RuntimeArt.Push,
+                false,
+                2.4f);
+            RuntimeArt.Primitive(
+                PrimitiveType.Cube,
+                "South Cyan Rail",
+                arenaRoot,
+                new Vector3(8.7f, 3.35f, -15.58f),
+                new Vector3(17f, 0.08f, 0.09f),
+                RuntimeArt.Pull,
+                false,
+                2.4f);
+            RuntimeArt.Primitive(
+                PrimitiveType.Cube,
+                "South Red Rail",
+                arenaRoot,
+                new Vector3(-8.7f, 3.35f, -15.58f),
+                new Vector3(17f, 0.08f, 0.09f),
+                RuntimeArt.Push,
+                false,
+                2.4f);
+
+            Transform emblem = new GameObject("Arena Field Emblem").transform;
+            emblem.SetParent(arenaRoot, false);
+            RuntimeArt.Ring(emblem, 5.4f, new Color(RuntimeArt.Pull.r, RuntimeArt.Pull.g, RuntimeArt.Pull.b, 0.3f), 0.035f, 80);
+            RuntimeArt.Ring(emblem, 6.2f, new Color(RuntimeArt.Push.r, RuntimeArt.Push.g, RuntimeArt.Push.b, 0.2f), 0.018f, 80);
+
+            Vector3[] beaconPositions =
+            {
+                new(-16.4f, 0f, -13.6f),
+                new(16.4f, 0f, -13.6f),
+                new(-16.4f, 0f, 13.6f),
+                new(16.4f, 0f, 13.6f)
+            };
+
+            for (int i = 0; i < beaconPositions.Length; i++)
+            {
+                Transform beacon = new GameObject($"Boundary Beacon {i + 1:00}").transform;
+                beacon.SetParent(arenaRoot, false);
+                beacon.localPosition = beaconPositions[i];
+                RuntimeArt.Primitive(
+                    PrimitiveType.Cylinder,
+                    "Beacon Base",
+                    beacon,
+                    new Vector3(0f, 0.55f, 0f),
+                    new Vector3(0.42f, 0.55f, 0.42f),
+                    RuntimeArt.Slate,
+                    false);
+                RuntimeArt.Primitive(
+                    PrimitiveType.Cube,
+                    "Beacon Light",
+                    beacon,
+                    new Vector3(0f, 1.25f, 0f),
+                    new Vector3(0.24f, 0.55f, 0.24f),
+                    i % 2 == 0 ? RuntimeArt.Pull : RuntimeArt.Push,
+                    false,
+                    2.6f);
+            }
         }
 
         private void CreateCover(Vector3 position, Vector3 scale)

@@ -11,7 +11,7 @@ namespace PolarityProtocol.Player
         [SerializeField] private float sensitivity = 2.4f;
         [SerializeField] private float smoothing = 14f;
         [SerializeField] private float collisionRadius = 0.25f;
-        [SerializeField] private float shoulderOffset = 0.85f;
+        [SerializeField] private float shoulderOffset = 1.35f;
 
         private Transform target;
         private float yaw;
@@ -58,7 +58,10 @@ namespace PolarityProtocol.Player
             Quaternion orbit = Quaternion.Euler(pitch, yaw, 0f);
             Vector3 focus = target.position + Vector3.up * height;
             Vector3 shoulder = orbit * Vector3.right * shoulderOffset;
-            Vector3 lookTarget = focus + shoulder * 0.38f;
+
+            // Aim point tracks the full shoulder offset so screen centre clears the
+            // player capsule. Partial offsets put the crosshair on the helmet.
+            Vector3 lookTarget = focus + shoulder;
             Vector3 desired = focus + shoulder - orbit * Vector3.forward * distance;
             Vector3 castDirection = desired - lookTarget;
             float castDistance = castDirection.magnitude;

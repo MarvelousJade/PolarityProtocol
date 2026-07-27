@@ -15,10 +15,10 @@ MonoBehaviour:
   placementRange: 22
   maximumActiveAnchors: 2
   radius: 7.5
-  strength: 42
+  strength: 78
   minimumDistance: 0.8
   duration: 10
-  falloffExponent: 1.35
+  falloffExponent: 1.1
   cooldown: 0.7
   energyCost: 34
   maximumEnergy: 100

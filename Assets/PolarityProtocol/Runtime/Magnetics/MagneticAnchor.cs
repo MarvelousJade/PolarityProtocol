@@ -84,7 +84,7 @@ namespace PolarityProtocol.Magnetics
                     definition.MinimumDistance,
                     definition.FalloffExponent);
 
-                target.ApplyMagneticForce(force, owner);
+                target.ApplyMagneticForce(force, owner, Polarity);
 
                 if (DebugOverlay.Enabled && lineIndex < debugLines.Length)
                 {

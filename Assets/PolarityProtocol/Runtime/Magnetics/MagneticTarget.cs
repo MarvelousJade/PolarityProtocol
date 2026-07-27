@@ -40,7 +40,7 @@ namespace PolarityProtocol.Magnetics
             forceMultiplier = Mathf.Max(0.05f, multiplier);
         }
 
-        public void ApplyMagneticForce(Vector3 force, GameObject anchorOwner)
+        public void ApplyMagneticForce(Vector3 force, GameObject anchorOwner, MagneticPolarity anchorPolarity)
         {
             if (body == null || body.isKinematic)
             {
@@ -51,7 +51,7 @@ namespace PolarityProtocol.Magnetics
             body.AddForce(applied, ForceMode.Acceleration);
             LastForce = applied;
             LastAffectedTime = Time.time;
-            enemy?.NotifyMagneticForce(applied.magnitude);
+            enemy?.NotifyMagneticForce(applied.magnitude, anchorPolarity);
 
             if (projectile != null && anchorOwner != null)
             {

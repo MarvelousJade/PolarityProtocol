@@ -43,16 +43,11 @@ namespace PolarityProtocol.Player
 
             if (GameSession.Active != null && GameSession.Active.IsRunning)
             {
+                // Yaw and pitch move only with player input. No auto-recentre behind
+                // the player -- it fought the stick whenever the player stopped aiming.
                 Vector2 look = LegacyInput.Look;
                 yaw += look.x * sensitivity;
                 pitch = Mathf.Clamp(pitch - look.y * sensitivity, -8f, 58f);
-
-                if (look.sqrMagnitude < 0.001f)
-                {
-                    Vector3 planarVelocity = target.forward;
-                    float targetYaw = Mathf.Atan2(planarVelocity.x, planarVelocity.z) * Mathf.Rad2Deg;
-                    yaw = Mathf.LerpAngle(yaw, targetYaw, Time.deltaTime * 0.35f);
-                }
             }
 
             Quaternion orbit = Quaternion.Euler(pitch, yaw, 0f);

@@ -2,6 +2,7 @@ using System.Collections;
 using PolarityProtocol.Arena;
 using PolarityProtocol.Combat;
 using PolarityProtocol.Data;
+using PolarityProtocol.Magnetics;
 using PolarityProtocol.Player;
 using PolarityProtocol.Utilities;
 using UnityEngine;
@@ -43,17 +44,21 @@ namespace PolarityProtocol.AI
         private float nextAttackTime;
         private float stateEndsAt;
         private float shieldExposedUntil;
+        private float magnetHeldUntil;
         private float flashEndsAt;
         private Vector3 desiredMove;
         private bool configured;
+        private bool plateTornOff;
+        private MagneticPolarity platePolarity = MagneticPolarity.Positive;
 
         public static int ActiveCount { get; private set; }
         public EnemyState State { get; private set; } = EnemyState.Acquiring;
         public EnemyDefinition Definition => definition;
         public Health Health => health;
+        public MagneticPolarity PlatePolarity => platePolarity;
         public bool ShieldExposed => definition != null &&
                                      definition.Archetype == EnemyArchetype.Shield &&
-                                     Time.time < shieldExposedUntil;
+                                     (plateTornOff || Time.time < shieldExposedUntil);
 
         private void Awake()
         {
@@ -125,8 +130,14 @@ namespace PolarityProtocol.AI
                 return;
             }
 
+            // Enemies route around plasma on their own, but a magnet dragging them
+            // overrides that -- otherwise they could never be pushed into a hazard.
+            Vector3 steer = Time.time < magnetHeldUntil
+                ? desiredMove
+                : Hazard.SteerAway(transform.position, desiredMove);
+
             Vector3 planarVelocity = Vector3.ProjectOnPlane(body.linearVelocity, Vector3.up);
-            Vector3 desiredVelocity = desiredMove * definition.MovementSpeed;
+            Vector3 desiredVelocity = steer * definition.MovementSpeed;
             Vector3 velocityDelta = Vector3.ClampMagnitude(
                 desiredVelocity - planarVelocity,
                 definition.Acceleration * Time.fixedDeltaTime);
@@ -174,6 +185,11 @@ namespace PolarityProtocol.AI
             modelBasePosition = enemyModel == null ? Vector3.zero : enemyModel.localPosition;
             shieldVisual = shield;
             shieldMaterial = shieldVisual == null ? null : shieldVisual.GetComponent<Renderer>().material;
+            // Plate polarity is rolled per unit so its colour tells the player which
+            // anchor tears it off -- the opposite one.
+            platePolarity = Random.value < 0.5f
+                ? MagneticPolarity.Negative
+                : MagneticPolarity.Positive;
             healthBarRoot = barRoot;
             healthFill = barFill;
             debugLabel = label;
@@ -189,15 +205,24 @@ namespace PolarityProtocol.AI
             SetState(EnemyState.Acquiring);
         }
 
-        public void NotifyMagneticForce(float magnitude)
+        public void NotifyMagneticForce(float magnitude, MagneticPolarity anchorPolarity)
         {
             if (!configured || magnitude < 8f)
             {
                 return;
             }
 
+            magnetHeldUntil = Time.time + 0.35f;
+
             if (definition.Archetype == EnemyArchetype.Shield)
             {
+                // An anchor of the opposite polarity attracts the plate and rips it
+                // off for good. A matching anchor only staggers the unit.
+                if (!plateTornOff && anchorPolarity != platePolarity)
+                {
+                    TearOffPlate();
+                }
+
                 shieldExposedUntil = Mathf.Max(shieldExposedUntil, Time.time + 3.2f);
             }
 
@@ -205,6 +230,38 @@ namespace PolarityProtocol.AI
             {
                 SetState(EnemyState.Displaced);
             }
+        }
+
+        private void TearOffPlate()
+        {
+            plateTornOff = true;
+
+            if (shieldVisual == null)
+            {
+                return;
+            }
+
+            Transform plate = shieldVisual;
+            shieldVisual = null;
+            shieldMaterial = null;
+
+            plate.SetParent(null, true);
+            plate.gameObject.AddComponent<BoxCollider>();
+
+            Rigidbody plateBody = plate.gameObject.AddComponent<Rigidbody>();
+            plateBody.mass = 1.3f;
+            plateBody.linearDamping = 0.35f;
+            plateBody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            plateBody.AddForce(
+                (transform.forward * 4.5f + Vector3.up * 3.2f) * plateBody.mass,
+                ForceMode.Impulse);
+            plateBody.AddTorque(Random.insideUnitSphere * 6f, ForceMode.Impulse);
+
+            plate.gameObject.AddComponent<MagneticTarget>().Configure(platePolarity, 1.6f);
+            Destroy(plate.gameObject, 8f);
+
+            FeedbackBus.Pulse(150f, 0.2f, 0.16f);
+            CameraRig.Active?.AddTrauma(0.16f);
         }
 
         public DamageInfo ModifyDamage(DamageInfo damage)
@@ -384,7 +441,10 @@ namespace PolarityProtocol.AI
 
             if (shieldVisual != null && shieldMaterial != null)
             {
-                Color shieldColor = ShieldExposed ? new Color(0.28f, 0.32f, 0.35f) : RuntimeArt.Gold;
+                Color plateColor = platePolarity == MagneticPolarity.Negative
+                    ? RuntimeArt.Pull
+                    : RuntimeArt.Push;
+                Color shieldColor = ShieldExposed ? new Color(0.28f, 0.32f, 0.35f) : plateColor;
                 shieldMaterial.color = shieldColor;
                 if (shieldMaterial.HasProperty("_EmissionColor"))
                 {

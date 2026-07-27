@@ -11,10 +11,10 @@ namespace PolarityProtocol.Data
 
         [Header("Field")]
         [SerializeField, Min(1f)] private float radius = 7.5f;
-        [SerializeField, Min(1f)] private float strength = 42f;
+        [SerializeField, Min(1f)] private float strength = 78f;
         [SerializeField, Min(0.05f)] private float minimumDistance = 0.8f;
         [SerializeField, Min(0.2f)] private float duration = 10f;
-        [SerializeField, Min(0.1f)] private float falloffExponent = 1.35f;
+        [SerializeField, Min(0.1f)] private float falloffExponent = 1.1f;
 
         [Header("Resource")]
         [SerializeField, Min(0f)] private float cooldown = 0.7f;
@@ -39,10 +39,10 @@ namespace PolarityProtocol.Data
             placementRange = 22f;
             maximumActiveAnchors = 2;
             radius = 7.5f;
-            strength = 42f;
+            strength = 78f;
             minimumDistance = 0.8f;
             duration = 10f;
-            falloffExponent = 1.35f;
+            falloffExponent = 1.1f;
             cooldown = 0.7f;
             energyCost = 34f;
             maximumEnergy = 100f;

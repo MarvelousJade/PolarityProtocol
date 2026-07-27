@@ -4,6 +4,7 @@ using PolarityProtocol.AI;
 using PolarityProtocol.Combat;
 using PolarityProtocol.Data;
 using PolarityProtocol.Magnetics;
+using PolarityProtocol.Player;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -66,6 +67,45 @@ namespace PolarityProtocol.Tests
             Object.Destroy(enemy);
             Object.Destroy(player);
             Object.Destroy(poolObject);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator Aim_ConvergesOnCrosshairTargetNotCameraForward()
+        {
+            // Wall straight ahead of the crosshair, camera offset to the shoulder.
+            GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.transform.position = new Vector3(0f, 1.25f, 20f);
+            wall.transform.localScale = new Vector3(30f, 8f, 1f);
+
+            GameObject shooter = new("Shooter");
+            shooter.transform.position = Vector3.zero;
+            PlayerCombat combat = shooter.AddComponent<PlayerCombat>();
+
+            GameObject cameraObject = new("Aim Camera");
+            Camera camera = cameraObject.AddComponent<Camera>();
+            cameraObject.transform.position = new Vector3(1.35f, 1.25f, -8f);
+            cameraObject.transform.rotation = Quaternion.identity;
+
+            // Colliders were repositioned after creation; without this the raycast
+            // queries their old pose and misses.
+            Physics.SyncTransforms();
+            yield return null;
+
+            Vector3 chest = shooter.transform.position + Vector3.up * 1.25f;
+            Vector3 aimPoint = combat.ResolveAimPoint(camera, chest);
+
+            // The crosshair ray leaves the camera, so its wall hit keeps the camera's
+            // lateral offset -- the shot must lean across to meet it.
+            Assert.That(aimPoint.z, Is.EqualTo(19.5f).Within(0.6f));
+            Assert.That(aimPoint.x, Is.EqualTo(1.35f).Within(0.3f));
+
+            Vector3 aimDirection = (aimPoint - chest).normalized;
+            Assert.That(aimDirection.x, Is.GreaterThan(0.02f));
+
+            Object.Destroy(wall);
+            Object.Destroy(shooter);
+            Object.Destroy(cameraObject);
             yield return null;
         }
 

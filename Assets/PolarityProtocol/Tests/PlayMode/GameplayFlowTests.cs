@@ -1,6 +1,9 @@
 using System.Collections;
 using NUnit.Framework;
+using PolarityProtocol.AI;
 using PolarityProtocol.Combat;
+using PolarityProtocol.Data;
+using PolarityProtocol.Magnetics;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -63,6 +66,49 @@ namespace PolarityProtocol.Tests
             Object.Destroy(enemy);
             Object.Destroy(player);
             Object.Destroy(poolObject);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator ShieldPlate_IsTornOffByOppositePolarityOnly()
+        {
+            GameObject unit = new("Shield Unit");
+            unit.AddComponent<Rigidbody>();
+            unit.AddComponent<Health>();
+            EnemyBrain brain = unit.AddComponent<EnemyBrain>();
+
+            GameObject plate = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            plate.transform.SetParent(unit.transform, false);
+
+            EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
+            definition.Configure(EnemyArchetype.Shield, 105f, 4.2f, 2.6f, 24f, 2.3f, Color.yellow);
+            brain.Configure(
+                definition,
+                null,
+                new Renderer[0],
+                null,
+                plate.transform,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
+
+            // A matching anchor staggers the unit but leaves the plate bolted on.
+            brain.NotifyMagneticForce(40f, brain.PlatePolarity);
+            Assert.That(plate.transform.parent, Is.EqualTo(unit.transform));
+
+            // The opposite anchor attracts the plate and strips it permanently.
+            brain.NotifyMagneticForce(40f, brain.PlatePolarity.Opposite());
+            yield return null;
+
+            Assert.That(plate.transform.parent, Is.Null);
+            Assert.That(brain.ShieldExposed, Is.True);
+
+            Object.Destroy(plate);
+            Object.Destroy(unit);
+            Object.Destroy(definition);
             yield return null;
         }
 

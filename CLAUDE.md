@@ -81,6 +81,8 @@ No service locator — dependencies flow data → simulation → orchestration �
 
 `MagneticForceSolver.Calculate` is a pure static function (no colliders, no components) — that is where force-behaviour tests belong. `MagneticAnchor.FixedUpdate` does the spatial query with a fixed 64-collider `Physics.OverlapSphereNonAlloc` buffer plus a `HashSet<MagneticTarget>` to dedupe compound colliders. `MagneticTarget` adapts the force to a `Rigidbody` (`ForceMode.Acceleration`) and forwards side effects: `EnemyBrain.NotifyMagneticForce` for displacement, `Projectile.RedirectByPlayer` for ownership transfer. AI state is never edited by magnetics directly.
 
+A target configured `resistsDisplacement` (the shield robot) still reports the field to its listeners but takes no force — that separation is what lets its plate tear off while the unit itself stays planted. Report-without-move is the seam to reuse for any future magnet-immune object; do not drop the `MagneticTarget`, or the owner stops hearing anchors at all.
+
 ### Combat
 
 `DamageInfo` is the shared message; `DamageReceiver` → `Health`, with any `IDamageModifier` on the same GameObject transforming it in between (`Health.CacheModifiers` scans `GetComponents<MonoBehaviour>()`). `EnemyBrain` implements the interface itself and reduces frontal damage only for the Shield archetype while unexposed — so projectile code stays ignorant of enemy types. Add per-enemy damage rules through this seam, not through `Projectile`.

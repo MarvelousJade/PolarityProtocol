@@ -14,9 +14,15 @@ namespace PolarityProtocol.Player
         [SerializeField] private float fireInterval = 0.23f;
 
         private readonly RaycastHit[] aimHits = new RaycastHit[8];
+        private PlayerMotor motor;
         private float cooldown;
 
         public float CooldownRemaining => cooldown;
+
+        private void Awake()
+        {
+            motor = GetComponent<PlayerMotor>();
+        }
 
         private void Update()
         {
@@ -46,11 +52,18 @@ namespace PolarityProtocol.Player
             }
 
             Ray ray = camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-            Vector3 aimPoint = ray.GetPoint(MaxAimDistance);
+
+            // Start the ray level with the muzzle. Anything between the camera and the
+            // player -- a crate at your back, an enemy that closed in -- would otherwise
+            // become the aim point and send the shot backwards through the model.
+            float muzzleDepth = Mathf.Max(0f, Vector3.Dot(muzzle - ray.origin, ray.direction));
+            Ray aimRay = new(ray.GetPoint(muzzleDepth), ray.direction);
+
+            Vector3 aimPoint = aimRay.GetPoint(MaxAimDistance);
             float nearest = float.MaxValue;
 
             int count = Physics.RaycastNonAlloc(
-                ray,
+                aimRay,
                 aimHits,
                 MaxAimDistance,
                 ~0,
@@ -79,6 +92,7 @@ namespace PolarityProtocol.Player
             Vector3 chest = transform.position + Vector3.up * 1.25f;
             Vector3 aimDirection = (ResolveAimPoint(camera, chest) - chest).normalized;
             Vector3 spawn = chest + aimDirection * 0.9f;
+            motor?.FaceAim(aimDirection);
 
             ProjectilePool.Active?.Spawn(
                 CombatFaction.Player,

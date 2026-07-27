@@ -110,6 +110,44 @@ namespace PolarityProtocol.Tests
         }
 
         [UnityTest]
+        public IEnumerator Aim_IgnoresObstaclesBehindThePlayer()
+        {
+            // Crate sitting between the camera and the player's back.
+            GameObject crate = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            crate.transform.position = new Vector3(1.35f, 1.25f, -4f);
+
+            GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.transform.position = new Vector3(0f, 1.25f, 20f);
+            wall.transform.localScale = new Vector3(30f, 8f, 1f);
+
+            GameObject shooter = new("Shooter");
+            shooter.transform.position = Vector3.zero;
+            PlayerCombat combat = shooter.AddComponent<PlayerCombat>();
+
+            GameObject cameraObject = new("Aim Camera");
+            Camera camera = cameraObject.AddComponent<Camera>();
+            cameraObject.transform.position = new Vector3(1.35f, 1.25f, -8f);
+            cameraObject.transform.rotation = Quaternion.identity;
+
+            Physics.SyncTransforms();
+            yield return null;
+
+            Vector3 chest = shooter.transform.position + Vector3.up * 1.25f;
+            Vector3 aimPoint = combat.ResolveAimPoint(camera, chest);
+            Vector3 aimDirection = (aimPoint - chest).normalized;
+
+            // The crate must not become the target -- that fires the shot backwards.
+            Assert.That(aimPoint.z, Is.GreaterThan(chest.z));
+            Assert.That(aimDirection.z, Is.GreaterThan(0f));
+
+            Object.Destroy(crate);
+            Object.Destroy(wall);
+            Object.Destroy(shooter);
+            Object.Destroy(cameraObject);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator ShieldPlate_IsTornOffByOppositePolarityOnly()
         {
             GameObject unit = new("Shield Unit");

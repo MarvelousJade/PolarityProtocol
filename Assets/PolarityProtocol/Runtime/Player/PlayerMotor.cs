@@ -23,6 +23,8 @@ namespace PolarityProtocol.Player
         private float dashRemaining;
         private float dashCooldownRemaining;
         private Vector3 spawnPoint;
+        private Vector3 aimFacing;
+        private float aimFacingUntil;
 
         public float DashCooldownNormalized => dashCooldown <= 0f
             ? 0f
@@ -91,9 +93,12 @@ namespace PolarityProtocol.Player
                 dashTrail.emitting = dashRemaining > 0f;
             }
 
-            if (desiredDirection.sqrMagnitude > 0.05f)
+            // Shooting wins over movement for facing, so shots leave the front of the
+            // model instead of punching out through its back while backpedalling.
+            Vector3 facing = Time.time < aimFacingUntil ? aimFacing : desiredDirection;
+            if (facing.sqrMagnitude > 0.05f)
             {
-                Quaternion desiredRotation = Quaternion.LookRotation(desiredDirection, Vector3.up);
+                Quaternion desiredRotation = Quaternion.LookRotation(facing.normalized, Vector3.up);
                 transform.rotation = Quaternion.Slerp(
                     transform.rotation,
                     desiredRotation,
@@ -115,6 +120,21 @@ namespace PolarityProtocol.Player
             {
                 TeleportToSpawn();
             }
+        }
+
+        /// <summary>
+        /// Turns the character to face a shot for a moment, overriding movement facing.
+        /// </summary>
+        public void FaceAim(Vector3 direction)
+        {
+            Vector3 flat = Vector3.ProjectOnPlane(direction, Vector3.up);
+            if (flat.sqrMagnitude < 0.01f)
+            {
+                return;
+            }
+
+            aimFacing = flat.normalized;
+            aimFacingUntil = Time.time + 0.45f;
         }
 
         public void TeleportToSpawn()

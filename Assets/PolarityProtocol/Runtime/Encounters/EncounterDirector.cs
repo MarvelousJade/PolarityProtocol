@@ -139,7 +139,10 @@ namespace PolarityProtocol.Encounters
             root.AddComponent<DamageReceiver>();
             EnemyBrain brain = root.AddComponent<EnemyBrain>();
             MagneticTarget magneticTarget = root.AddComponent<MagneticTarget>();
-            magneticTarget.Configure(MagneticPolarity.Positive, definition.Archetype == EnemyArchetype.Shield ? 0.72f : 1f);
+            bool shieldUnit = definition.Archetype == EnemyArchetype.Shield;
+            // The shield robot braces against anchors -- only its plate answers the
+            // field. Every other archetype can be dragged freely.
+            magneticTarget.Configure(MagneticPolarity.Positive, 1f, shieldUnit);
 
             Transform model = new GameObject("Robot Model").transform;
             model.SetParent(root.transform, false);

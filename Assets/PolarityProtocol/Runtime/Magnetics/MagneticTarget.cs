@@ -10,6 +10,7 @@ namespace PolarityProtocol.Magnetics
     {
         [SerializeField] private MagneticPolarity polarity = MagneticPolarity.Positive;
         [SerializeField, Min(0.05f)] private float forceMultiplier = 1f;
+        [SerializeField] private bool immovable;
 
         private Rigidbody body;
         private Projectile projectile;
@@ -34,10 +35,11 @@ namespace PolarityProtocol.Magnetics
             }
         }
 
-        public void Configure(MagneticPolarity targetPolarity, float multiplier)
+        public void Configure(MagneticPolarity targetPolarity, float multiplier, bool resistsDisplacement = false)
         {
             polarity = targetPolarity;
             forceMultiplier = Mathf.Max(0.05f, multiplier);
+            immovable = resistsDisplacement;
         }
 
         public void ApplyMagneticForce(Vector3 force, GameObject anchorOwner, MagneticPolarity anchorPolarity)
@@ -48,7 +50,14 @@ namespace PolarityProtocol.Magnetics
             }
 
             Vector3 applied = force * forceMultiplier;
-            body.AddForce(applied, ForceMode.Acceleration);
+
+            // An immovable target still reports the field to its listeners -- that is
+            // how a shield unit's plate reacts while the robot itself refuses to budge.
+            if (!immovable)
+            {
+                body.AddForce(applied, ForceMode.Acceleration);
+            }
+
             LastForce = applied;
             LastAffectedTime = Time.time;
             enemy?.NotifyMagneticForce(applied.magnitude, anchorPolarity);

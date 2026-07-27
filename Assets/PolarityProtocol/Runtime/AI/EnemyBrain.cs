@@ -212,18 +212,21 @@ namespace PolarityProtocol.AI
                 return;
             }
 
-            magnetHeldUntil = Time.time + 0.35f;
-
             if (definition.Archetype == EnemyArchetype.Shield)
             {
-                // An anchor of the opposite polarity attracts the plate and rips it
-                // off for good. A matching anchor only staggers the unit.
+                // An anchor of the opposite polarity attracts the plate and rips it off
+                // for good. A matching anchor only staggers the unit. The robot itself
+                // never moves, so it keeps avoiding plasma even inside a field.
                 if (!plateTornOff && anchorPolarity != platePolarity)
                 {
                     TearOffPlate();
                 }
 
                 shieldExposedUntil = Mathf.Max(shieldExposedUntil, Time.time + 3.2f);
+            }
+            else
+            {
+                magnetHeldUntil = Time.time + 0.35f;
             }
 
             if (State != EnemyState.Dead && State != EnemyState.Telegraphing)

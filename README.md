@@ -117,14 +117,9 @@ For a WebGL build:
   -logFile 'G:\C++ PROJECTS\PolarityProtocol\Logs\webgl-build.log'
 ```
 
-The WebGL builder produces a release player in `Builds/WebGL` with gzip compression and a decompression fallback for static hosts. Zip the directory contents—not the enclosing directory—so `index.html` is at the archive root:
+The WebGL builder produces a release player in `Builds/WebGL` with gzip compression and a decompression fallback for static hosts. It also creates `Builds/PolarityProtocol-WebGL.zip` with portable forward-slash archive paths and `index.html` at the archive root.
 
-```powershell
-Compress-Archive -Path '.\Builds\WebGL\*' `
-  -DestinationPath '.\Builds\PolarityProtocol-WebGL.zip' -Force
-```
-
-On itch.io, upload the zip as an HTML project and enable **This file will be played in the browser**. Build output is ignored by Git because Unity players are large and fully reproducible.
+On itch.io, upload `PolarityProtocol-WebGL.zip` as an HTML project and enable **This file will be played in the browser**. Do not upload `index.html` by itself. Build output is ignored by Git because Unity players are large and fully reproducible.
 
 ## Tests
 

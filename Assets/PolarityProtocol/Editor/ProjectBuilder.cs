@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.IO.Compression;
 using PolarityProtocol.Arena;
 using PolarityProtocol.Data;
 using PolarityProtocol.Utilities;
@@ -86,10 +87,46 @@ namespace PolarityProtocol.Editor
                     $"({report.summary.totalErrors} errors).");
             }
 
+            string archivePath = CreateWebGLArchive(buildDirectory);
             Debug.Log(
                 $"[Polarity Protocol] WebGL player built at {buildDirectory} " +
                 $"({report.summary.totalSize / (1024f * 1024f):0.0} MiB). " +
-                "Zip the directory contents so index.html is at the archive root for itch.io.");
+                $"Itch.io upload archive created at {archivePath}.");
+        }
+
+        private static string CreateWebGLArchive(string buildDirectory)
+        {
+            string archivePath = Path.GetFullPath("Builds/PolarityProtocol-WebGL.zip");
+            if (File.Exists(archivePath))
+            {
+                File.Delete(archivePath);
+            }
+
+            string normalizedRoot = Path.GetFullPath(buildDirectory)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) +
+                Path.DirectorySeparatorChar;
+            string[] files = Directory.GetFiles(
+                normalizedRoot,
+                "*",
+                SearchOption.AllDirectories);
+            Array.Sort(files, StringComparer.Ordinal);
+
+            using FileStream archiveStream = File.Create(archivePath);
+            using ZipArchive archive = new(archiveStream, ZipArchiveMode.Create);
+            for (int i = 0; i < files.Length; i++)
+            {
+                string entryPath = files[i]
+                    .Substring(normalizedRoot.Length)
+                    .Replace('\\', '/');
+                ZipArchiveEntry entry = archive.CreateEntry(
+                    entryPath,
+                    System.IO.Compression.CompressionLevel.Optimal);
+                using Stream source = File.OpenRead(files[i]);
+                using Stream destination = entry.Open();
+                source.CopyTo(destination);
+            }
+
+            return archivePath;
         }
 
         public static void BuildAll()

@@ -550,7 +550,7 @@ namespace PolarityProtocol.UI
             {
                 displayedPolarity = polarity;
                 bool pull = polarity == MagneticPolarity.Negative;
-                polarityTitle.text = $"{polarity.Verb()} ANCHOR";
+                polarityTitle.text = $"{polarity.Label()} ANCHOR";
                 abilityPanel.EnableInClassList("polarity-pull", pull);
                 abilityPanel.EnableInClassList("polarity-push", !pull);
                 crosshair.EnableInClassList("polarity-pull", pull);

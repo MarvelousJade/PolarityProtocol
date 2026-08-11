@@ -19,7 +19,7 @@
 
             <ui:VisualElement name="ability-panel" class="hud-panel ability-panel polarity-pull" picking-mode="Ignore">
                 <ui:VisualElement class="ability-header" picking-mode="Ignore">
-                    <ui:Label name="polarity-title" text="PULL ANCHOR" class="hud-heading" picking-mode="Ignore" />
+                    <ui:Label name="polarity-title" text="BLUE ANCHOR" class="hud-heading" picking-mode="Ignore" />
                     <ui:Label name="anchor-count" text="0 / 2 ACTIVE" class="micro-copy" picking-mode="Ignore" />
                 </ui:VisualElement>
                 <ui:VisualElement name="energy-bar-host" class="status-host status-host-energy" picking-mode="Ignore" />

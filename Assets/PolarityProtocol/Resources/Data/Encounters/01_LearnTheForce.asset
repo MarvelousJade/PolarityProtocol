@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: 01_LearnTheForce
   m_EditorClassIdentifier: PolarityProtocol.Runtime::PolarityProtocol.Data.EncounterDefinition
   displayName: ENCOUNTER 01 // LEARN THE FORCE
-  objective: PULL a chaser off course. PUSH it into the plasma hazard.
+  objective: Use a RED anchor to PULL blue chasers. Use BLUE to PUSH them into plasma.
   spawns:
   - archetype: 0
     position: {x: -7, y: 1, z: 3}

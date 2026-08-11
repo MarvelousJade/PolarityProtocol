@@ -111,7 +111,7 @@ namespace PolarityProtocol.Abilities
                 }
             }
 
-            GameObject anchorObject = new($"{SelectedPolarity.Verb()} Anchor");
+            GameObject anchorObject = new($"{SelectedPolarity.Label()} Anchor");
             anchorObject.transform.position = placementPoint + placementNormal * 0.05f;
             anchorObject.transform.up = placementNormal;
             MagneticAnchor anchor = anchorObject.AddComponent<MagneticAnchor>();

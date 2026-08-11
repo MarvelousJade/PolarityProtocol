@@ -142,7 +142,7 @@ namespace PolarityProtocol.Encounters
             bool shieldUnit = definition.Archetype == EnemyArchetype.Shield;
             // The shield robot braces against anchors -- only its plate answers the
             // field. Every other archetype can be dragged freely.
-            magneticTarget.Configure(MagneticPolarity.Positive, 1f, shieldUnit);
+            magneticTarget.Configure(definition.Polarity, 1f, shieldUnit);
 
             Transform model = new GameObject("Robot Model").transform;
             model.SetParent(root.transform, false);
@@ -164,9 +164,13 @@ namespace PolarityProtocol.Encounters
                 model,
                 new Vector3(0f, 1.08f, 0.48f),
                 new Vector3(0.78f, 0.58f, 0.14f),
-                RuntimeArt.Slate,
+                shieldUnit
+                    ? RuntimeArt.Slate
+                    : definition.Polarity == MagneticPolarity.Negative
+                        ? RuntimeArt.Pull
+                        : RuntimeArt.Push,
                 false,
-                0.1f);
+                shieldUnit ? 0.1f : 0.7f);
 
             GameObject head = RuntimeArt.Primitive(
                 PrimitiveType.Cube,

@@ -161,7 +161,15 @@ namespace PolarityProtocol.Tests
             plate.transform.SetParent(unit.transform, false);
 
             EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
-            definition.Configure(EnemyArchetype.Shield, 105f, 4.2f, 2.6f, 24f, 2.3f, Color.yellow);
+            definition.Configure(
+                EnemyArchetype.Shield,
+                105f,
+                4.2f,
+                2.6f,
+                24f,
+                2.3f,
+                MagneticPolarity.Positive,
+                Color.yellow);
             brain.Configure(
                 definition,
                 null,
@@ -248,7 +256,15 @@ namespace PolarityProtocol.Tests
             unit.AddComponent<Health>();
             EnemyBrain brain = unit.AddComponent<EnemyBrain>();
             EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
-            definition.Configure(EnemyArchetype.Shooter, 48f, 4.6f, 18f, 14f, 2.2f, Color.magenta);
+            definition.Configure(
+                EnemyArchetype.Shooter,
+                48f,
+                4.6f,
+                18f,
+                14f,
+                2.2f,
+                MagneticPolarity.Positive,
+                Color.magenta);
             brain.Configure(
                 definition,
                 player.transform,
@@ -294,7 +310,15 @@ namespace PolarityProtocol.Tests
             EnemyBrain brain = unit.AddComponent<EnemyBrain>();
 
             EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
-            definition.Configure(EnemyArchetype.Chaser, 65f, 6.2f, 2.3f, 18f, 1.7f, Color.red);
+            definition.Configure(
+                EnemyArchetype.Chaser,
+                65f,
+                6.2f,
+                2.3f,
+                18f,
+                1.7f,
+                MagneticPolarity.Negative,
+                Color.red);
             brain.Configure(
                 definition,
                 null,
@@ -322,6 +346,41 @@ namespace PolarityProtocol.Tests
 
             Object.Destroy(hazardObject);
             Object.Destroy(unit);
+            Object.Destroy(definition);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator BlueEnemy_IsSpawnedWithNegativePolarityAndPulledByRed()
+        {
+            GameObject player = new("Player");
+            EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
+            definition.Configure(
+                EnemyArchetype.Chaser,
+                65f,
+                6.2f,
+                2.3f,
+                18f,
+                1.7f,
+                MagneticPolarity.Negative,
+                Color.cyan);
+
+            EnemyBrain enemy = EnemyFactory.Create(definition, player.transform, Vector3.right * 3f);
+            MagneticTarget target = enemy.GetComponent<MagneticTarget>();
+            Vector3 force = MagneticForceSolver.Calculate(
+                Vector3.zero,
+                enemy.transform.position,
+                MagneticPolarity.Positive,
+                target.Polarity,
+                40f,
+                8f,
+                0.5f);
+
+            Assert.That(target.Polarity, Is.EqualTo(MagneticPolarity.Negative));
+            Assert.That(force.x, Is.LessThan(0f), "The red positive anchor should pull a blue negative enemy.");
+
+            Object.Destroy(enemy.gameObject);
+            Object.Destroy(player);
             Object.Destroy(definition);
             yield return null;
         }

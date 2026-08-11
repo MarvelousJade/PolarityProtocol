@@ -23,4 +23,5 @@ MonoBehaviour:
   perceptionRange: 35
   preferredRange: 1.7249999
   projectileSpeed: 14
-  accent: {r: 1, g: 0.25, b: 0.37, a: 1}
+  magneticPolarity: -1
+  accent: {r: 0.18, g: 0.87, b: 1, a: 1}

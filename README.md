@@ -7,8 +7,8 @@ Built with Unity `6000.4.11f1` and C#. The playable Windows development build is
 ## Gameplay at a glance
 
 - Place up to two persistent magnetic anchors on arena surfaces.
-- Use a negative anchor to **pull** positive magnetic targets.
-- Use a positive anchor to **push** positive magnetic targets.
+- Opposite polarities **pull** while matching polarities **push**.
+- Pull blue negative enemies with a red positive anchor, then repel them with blue.
 - Redirect shooter projectiles by bending them through a player-owned field.
 - Displace shield units to expose them for three seconds.
 - Push enemies into pulsing plasma hazards.
@@ -24,7 +24,7 @@ The demo has a responsive Unity UI Toolkit intro/tutorial, combat HUD, pause/res
 | Aim / orbit | Mouse | Right stick |
 | Fire | Left mouse | `RB` or `A` |
 | Place anchor | Right mouse | `LB` |
-| Toggle pull/push | `Q` | `X` |
+| Toggle blue/red polarity | `Q` | `X` |
 | Recall anchors | `R` | `Y` |
 | Dash | `Space` | `B` |
 | Sprint | `Shift` | Left stick press |
@@ -48,7 +48,7 @@ The demo has a responsive Unity UI Toolkit intro/tutorial, combat HUD, pause/res
 - Runtime force vectors, AI states, targeting ranges, active counts, and frame-rate diagnostics retained as an IMGUI developer overlay
 - Encounter authoring window with draggable spawn handles, range preview, and bounds/separation validation
 - Dedicated stress scene and packaged-player benchmark mode
-- Six Edit Mode tests and six Play Mode tests
+- Six Edit Mode tests and seven Play Mode tests
 
 ## Project layout
 
@@ -145,7 +145,7 @@ Run the suites from Unity Test Runner, or use:
 Verified locally:
 
 - Edit Mode: **6/6 passed**
-- Play Mode: **6/6 passed**
+- Play Mode: **7/7 passed**
 - Windows x64 development player: **build succeeded**
 - Packaged-player smoke run: **no runtime exceptions**
 

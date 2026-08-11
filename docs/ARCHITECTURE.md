@@ -42,7 +42,7 @@ The solver follows:
 4. Attract opposite polarities and repel matching polarities.
 5. Return a force vector without changing scene state.
 
-All demo targets have positive polarity, making negative anchors pull and positive anchors push.
+Enemy definitions carry their magnetic polarity, and their colour/indicator exposes it to the player. The opening blue chasers are negative, so red positive anchors pull them and blue negative anchors push them. Opposite polarities always attract; matching polarities repel.
 
 ### Combat
 

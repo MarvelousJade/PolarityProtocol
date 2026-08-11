@@ -545,9 +545,33 @@ namespace PolarityProtocol.Arena
 
             return new[]
             {
-                CreateEnemyFallback(EnemyArchetype.Chaser, 65f, 6.2f, 2.3f, 18f, 1.7f, RuntimeArt.Push),
-                CreateEnemyFallback(EnemyArchetype.Shooter, 48f, 4.6f, 18f, 14f, 2.2f, new Color(0.72f, 0.35f, 1f)),
-                CreateEnemyFallback(EnemyArchetype.Shield, 105f, 4.2f, 2.6f, 24f, 2.3f, RuntimeArt.Gold)
+                CreateEnemyFallback(
+                    EnemyArchetype.Chaser,
+                    65f,
+                    6.2f,
+                    2.3f,
+                    18f,
+                    1.7f,
+                    MagneticPolarity.Negative,
+                    RuntimeArt.Pull),
+                CreateEnemyFallback(
+                    EnemyArchetype.Shooter,
+                    48f,
+                    4.6f,
+                    18f,
+                    14f,
+                    2.2f,
+                    MagneticPolarity.Positive,
+                    new Color(0.72f, 0.35f, 1f)),
+                CreateEnemyFallback(
+                    EnemyArchetype.Shield,
+                    105f,
+                    4.2f,
+                    2.6f,
+                    24f,
+                    2.3f,
+                    MagneticPolarity.Positive,
+                    RuntimeArt.Gold)
             };
         }
 
@@ -558,10 +582,11 @@ namespace PolarityProtocol.Arena
             float range,
             float damage,
             float cooldown,
+            MagneticPolarity polarity,
             Color accent)
         {
             EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
-            definition.Configure(kind, health, speed, range, damage, cooldown, accent);
+            definition.Configure(kind, health, speed, range, damage, cooldown, polarity, accent);
             return definition;
         }
 
@@ -578,7 +603,7 @@ namespace PolarityProtocol.Arena
             EncounterDefinition first = ScriptableObject.CreateInstance<EncounterDefinition>();
             first.Configure(
                 "ENCOUNTER 01 // LEARN THE FORCE",
-                "PULL a chaser off course. PUSH it into the plasma hazard.",
+                "Use a RED anchor to PULL blue chasers. Use BLUE to PUSH them into plasma.",
                 new[]
                 {
                     new EncounterDefinition.Spawn(EnemyArchetype.Chaser, new Vector3(-7f, 1f, 3f)),

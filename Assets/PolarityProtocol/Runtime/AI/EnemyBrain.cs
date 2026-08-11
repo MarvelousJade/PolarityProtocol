@@ -188,6 +188,7 @@ namespace PolarityProtocol.AI
 
         public void Configure(
             EnemyDefinition enemyDefinition,
+            MagneticPolarity unitPolarity,
             Transform player,
             Renderer[] enemyRenderers,
             Transform enemyModel,
@@ -211,11 +212,9 @@ namespace PolarityProtocol.AI
             modelBasePosition = enemyModel == null ? Vector3.zero : enemyModel.localPosition;
             shieldVisual = shield;
             shieldMaterial = shieldVisual == null ? null : shieldVisual.GetComponent<Renderer>().material;
-            // Plate polarity is rolled per unit so its colour tells the player which
-            // anchor tears it off -- the opposite one.
-            platePolarity = Random.value < 0.5f
-                ? MagneticPolarity.Negative
-                : MagneticPolarity.Positive;
+            // Shield plates share the unit's visible polarity, so the opposite-colour
+            // anchor that pulls the robot is also the one that tears its plate off.
+            platePolarity = unitPolarity;
             // Shooter rounds alternate after a random first polarity. Telegraphing the
             // loaded colour gives the player time to select the opposite anchor.
             loadedProjectilePolarity = Random.value < 0.5f
@@ -227,7 +226,9 @@ namespace PolarityProtocol.AI
             attackRangeRing = attackRing;
             perceptionRing = sightRing;
             aimLine = telegraphLine;
-            baseColor = definition.Accent;
+            baseColor = unitPolarity == MagneticPolarity.Negative
+                ? RuntimeArt.Pull
+                : RuntimeArt.Push;
             health.Configure(definition.MaximumHealth, CombatFaction.Enemy);
             health.Damaged += OnDamaged;
             health.Died += OnDied;

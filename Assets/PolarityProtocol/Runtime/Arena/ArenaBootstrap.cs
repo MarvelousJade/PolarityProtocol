@@ -553,8 +553,7 @@ namespace PolarityProtocol.Arena
                     2.3f,
                     18f,
                     1.7f,
-                    MagneticPolarity.Negative,
-                    RuntimeArt.Pull),
+                    RuntimeArt.Push),
                 CreateEnemyFallback(
                     EnemyArchetype.Shooter,
                     48f,
@@ -562,7 +561,6 @@ namespace PolarityProtocol.Arena
                     18f,
                     14f,
                     2.2f,
-                    MagneticPolarity.Positive,
                     new Color(0.72f, 0.35f, 1f)),
                 CreateEnemyFallback(
                     EnemyArchetype.Shield,
@@ -571,7 +569,6 @@ namespace PolarityProtocol.Arena
                     2.6f,
                     24f,
                     2.3f,
-                    MagneticPolarity.Positive,
                     RuntimeArt.Gold)
             };
         }
@@ -583,11 +580,10 @@ namespace PolarityProtocol.Arena
             float range,
             float damage,
             float cooldown,
-            MagneticPolarity polarity,
             Color accent)
         {
             EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
-            definition.Configure(kind, health, speed, range, damage, cooldown, polarity, accent);
+            definition.Configure(kind, health, speed, range, damage, cooldown, accent);
             return definition;
         }
 
@@ -604,7 +600,7 @@ namespace PolarityProtocol.Arena
             EncounterDefinition first = ScriptableObject.CreateInstance<EncounterDefinition>();
             first.Configure(
                 "ENCOUNTER 01 // LEARN THE FORCE",
-                "Use a RED anchor to PULL blue chasers. Use BLUE to PUSH them into plasma.",
+                "Use the OPPOSITE colour to PULL robots. MATCH their colour to PUSH them into plasma.",
                 new[]
                 {
                     new EncounterDefinition.Spawn(EnemyArchetype.Chaser, new Vector3(-7f, 1f, 3f)),

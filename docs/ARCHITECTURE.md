@@ -42,7 +42,7 @@ The solver follows:
 4. Attract opposite polarities and repel matching polarities.
 5. Return a force vector without changing scene state.
 
-Enemy definitions carry their magnetic polarity, and their colour/indicator exposes it to the player. The opening blue chasers are negative, so red positive anchors pull them and blue negative anchors push them. Opposite polarities always attract; matching polarities repel.
+Each spawned enemy receives a blue negative or red positive polarity, which drives both its body colour and `MagneticTarget`. Encounter waves randomize the starting colour and then alternate, guaranteeing both polarities whenever a wave has multiple enemies. Opposite polarities always attract; matching polarities repel.
 
 Most other world targets are positive. Shooter rounds alternate between positive red and negative blue polarity; an opposite-colour anchor attracts and captures them for redirection. After capture, bounded steering turns the round back toward its original shooter so the field deflection resolves into a readable return arc instead of an uncontrolled orbit.
 

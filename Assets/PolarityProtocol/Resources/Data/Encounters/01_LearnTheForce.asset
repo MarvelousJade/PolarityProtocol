@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: 01_LearnTheForce
   m_EditorClassIdentifier: PolarityProtocol.Runtime::PolarityProtocol.Data.EncounterDefinition
   displayName: ENCOUNTER 01 // LEARN THE FORCE
-  objective: Use a RED anchor to PULL blue chasers. Use BLUE to PUSH them into plasma.
+  objective: Use the OPPOSITE colour to PULL robots. MATCH their colour to PUSH them into plasma.
   spawns:
   - archetype: 0
     position: {x: -7, y: 1, z: 3}

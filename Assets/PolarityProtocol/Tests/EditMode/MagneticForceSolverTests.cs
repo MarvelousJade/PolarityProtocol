@@ -54,6 +54,22 @@ namespace PolarityProtocol.Tests
         }
 
         [Test]
+        public void Force_RemainsMeaningfulAtVisibleRadius()
+        {
+            Vector3 force = MagneticForceSolver.Calculate(
+                Vector3.zero,
+                Vector3.right * 7.5f,
+                MagneticPolarity.Negative,
+                MagneticPolarity.Positive,
+                78f,
+                7.5f,
+                0.8f,
+                1.1f);
+
+            Assert.That(force.magnitude, Is.GreaterThan(8f));
+        }
+
+        [Test]
         public void MinimumDistance_PreventsNonFiniteForce()
         {
             Vector3 force = MagneticForceSolver.Calculate(

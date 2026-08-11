@@ -38,7 +38,7 @@ The solver follows:
 
 1. Reject targets outside the field radius.
 2. Clamp distance to a stable minimum.
-3. Apply exponential radial falloff.
+3. Apply exponential radial falloff with a small edge floor so the visible ring remains a meaningful force boundary.
 4. Attract opposite polarities and repel matching polarities.
 5. Return a force vector without changing scene state.
 

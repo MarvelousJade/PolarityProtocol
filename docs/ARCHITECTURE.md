@@ -44,6 +44,8 @@ The solver follows:
 
 Each spawned enemy receives a blue negative or red positive polarity, which drives both its body colour and `MagneticTarget`. Encounter waves randomize the starting colour and then alternate, guaranteeing both polarities whenever a wave has multiple enemies. Opposite polarities always attract; matching polarities repel.
 
+A shield unit's plate has the opposite polarity from its body. While attached, the plate's response counters the body's response and the unit resists displacement. An anchor matching the body pulls off the opposite-colour plate; the player can then switch to the plate's colour to pull the exposed body. `MagneticTarget` continues reporting force while resistant so `EnemyBrain` can detect that first plate-removal field.
+
 Most other world targets are positive. Shooter rounds alternate between positive red and negative blue polarity; an opposite-colour anchor attracts and captures them for redirection. After capture, bounded steering turns the round back toward its original shooter so the field deflection resolves into a readable return arc instead of an uncontrolled orbit.
 
 ### Combat
@@ -58,7 +60,7 @@ Most other world targets are positive. Shooter rounds alternate between positive
 
 - Chaser: pursue → telegraph → melee → recover
 - Shooter: approach/retreat/strafe → telegraph → fire → recover
-- Shield: chaser behavior plus a frontal damage modifier and magnetic exposure window
+- Shield: chaser behavior plus an opposite-polarity removable plate; its body becomes movable and vulnerable after removal
 
 Local hazard steering uses the full visible plasma footprint plus enemy clearance, routes inward movement around the nearest edge, redirects unsafe Rigidbody momentum, and corrects unsafe authored or collision-displaced positions. The damaging trigger is deliberately smaller than the visual plasma, so presentation does not understate the danger. During magnetic displacement the AI motor yields, so field force—not pursuit locomotion—is what can carry a movable enemy into plasma. Enemy hazard damage is gated by a short recent-field window; players and other ungated health targets still take environmental damage normally.
 

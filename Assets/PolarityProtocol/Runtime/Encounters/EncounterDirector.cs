@@ -165,8 +165,8 @@ namespace PolarityProtocol.Encounters
             EnemyBrain brain = root.AddComponent<EnemyBrain>();
             MagneticTarget magneticTarget = root.AddComponent<MagneticTarget>();
             bool shieldUnit = definition.Archetype == EnemyArchetype.Shield;
-            // The shield robot braces against anchors -- only its plate answers the
-            // field. Every other archetype can be dragged freely.
+            // The opposite-polarity plate braces the shield robot until it is torn off.
+            // Every other archetype can be dragged immediately.
             magneticTarget.Configure(polarity, 1f, shieldUnit);
 
             Transform model = new GameObject("Robot Model").transform;
@@ -264,13 +264,17 @@ namespace PolarityProtocol.Encounters
             Transform shield = null;
             if (definition.Archetype == EnemyArchetype.Shield)
             {
+                MagneticPolarity platePolarity = polarity.Opposite();
+                Color plateColor = platePolarity == MagneticPolarity.Negative
+                    ? RuntimeArt.Pull
+                    : RuntimeArt.Push;
                 GameObject shieldObject = RuntimeArt.Primitive(
                     PrimitiveType.Cube,
                     "Directional Shield",
                     model,
                     new Vector3(0f, 1.15f, 0.78f),
                     new Vector3(1.5f, 1.8f, 0.12f),
-                    polarityColor,
+                    plateColor,
                     false,
                     1.2f);
                 shield = shieldObject.transform;

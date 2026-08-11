@@ -28,6 +28,7 @@ namespace PolarityProtocol.AI
         private Transform target;
         private Rigidbody body;
         private Health health;
+        private MagneticTarget magneticTarget;
         private Renderer[] renderers;
         private Material[] bodyMaterials;
         private Color baseColor;
@@ -43,7 +44,6 @@ namespace PolarityProtocol.AI
         private LineRenderer perceptionRing;
         private float nextAttackTime;
         private float stateEndsAt;
-        private float shieldExposedUntil;
         private float magnetHeldUntil;
         private float hazardVulnerableUntil;
         private float hazardTurnBias;
@@ -62,7 +62,7 @@ namespace PolarityProtocol.AI
         public bool CanTakeHazardDamage => Time.time < hazardVulnerableUntil;
         public bool ShieldExposed => definition != null &&
                                      definition.Archetype == EnemyArchetype.Shield &&
-                                     (plateTornOff || Time.time < shieldExposedUntil);
+                                     plateTornOff;
 
         private void Awake()
         {
@@ -202,6 +202,7 @@ namespace PolarityProtocol.AI
         {
             definition = enemyDefinition;
             target = player;
+            magneticTarget = GetComponent<MagneticTarget>();
             renderers = enemyRenderers;
             bodyMaterials = new Material[renderers.Length];
             for (int i = 0; i < renderers.Length; i++)
@@ -212,9 +213,9 @@ namespace PolarityProtocol.AI
             modelBasePosition = enemyModel == null ? Vector3.zero : enemyModel.localPosition;
             shieldVisual = shield;
             shieldMaterial = shieldVisual == null ? null : shieldVisual.GetComponent<Renderer>().material;
-            // Shield plates share the unit's visible polarity, so the opposite-colour
-            // anchor that pulls the robot is also the one that tears its plate off.
-            platePolarity = unitPolarity;
+            // The plate opposes the body: an anchor matching the body pulls the plate
+            // away, then the player switches colour to pull the exposed body.
+            platePolarity = unitPolarity.Opposite();
             // Shooter rounds alternate after a random first polarity. Telegraphing the
             // loaded colour gives the player time to select the opposite anchor.
             loadedProjectilePolarity = Random.value < 0.5f
@@ -252,15 +253,18 @@ namespace PolarityProtocol.AI
 
             if (definition.Archetype == EnemyArchetype.Shield)
             {
-                // An anchor of the opposite polarity attracts the plate and rips it off
-                // for good. A matching anchor only staggers the unit. The robot itself
-                // never moves, so it keeps avoiding plasma even inside a field.
+                // While attached, the opposite-colour plate braces the body by answering
+                // the field in the other direction. Pull the plate off with an anchor
+                // matching the body; only then can magnetic force move the robot.
                 if (!plateTornOff && anchorPolarity != platePolarity)
                 {
                     TearOffPlate();
                 }
 
-                shieldExposedUntil = Mathf.Max(shieldExposedUntil, Time.time + 3.2f);
+                if (plateTornOff)
+                {
+                    magnetHeldUntil = Time.time + 0.8f;
+                }
             }
             else
             {
@@ -276,6 +280,7 @@ namespace PolarityProtocol.AI
         private void TearOffPlate()
         {
             plateTornOff = true;
+            magneticTarget?.SetDisplacementResistance(false);
 
             if (shieldVisual == null)
             {

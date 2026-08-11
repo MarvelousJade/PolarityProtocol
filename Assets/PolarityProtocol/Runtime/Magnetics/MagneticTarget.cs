@@ -17,6 +17,7 @@ namespace PolarityProtocol.Magnetics
         private EnemyBrain enemy;
 
         public MagneticPolarity Polarity => polarity;
+        public bool ResistsDisplacement => immovable;
         public Vector3 LastForce { get; private set; }
         public float LastAffectedTime { get; private set; }
 
@@ -39,6 +40,11 @@ namespace PolarityProtocol.Magnetics
         {
             polarity = targetPolarity;
             forceMultiplier = Mathf.Max(0.05f, multiplier);
+            immovable = resistsDisplacement;
+        }
+
+        public void SetDisplacementResistance(bool resistsDisplacement)
+        {
             immovable = resistsDisplacement;
         }
 

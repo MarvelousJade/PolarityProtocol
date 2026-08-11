@@ -189,7 +189,7 @@ namespace PolarityProtocol.Editor
             CreateEncounter(
                 "03_Combine",
                 "ENCOUNTER 03 // COMBINE",
-                "Displace the shield unit, redirect fire, and control the whole arena.",
+                "Match the robot to pull off its opposite-colour shield, then switch colour to pull the body.",
                 new[]
                 {
                     new EncounterDefinition.Spawn(EnemyArchetype.Shield, new Vector3(0f, 1f, 10f)),

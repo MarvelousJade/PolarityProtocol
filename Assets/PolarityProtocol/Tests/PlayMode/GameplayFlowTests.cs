@@ -187,16 +187,9 @@ namespace PolarityProtocol.Tests
         }
 
         [UnityTest]
-        public IEnumerator ShieldPlate_IsTornOffByOppositePolarityOnly()
+        public IEnumerator ShieldPlate_OpposesBodyAndMustBeRemovedBeforeBodyMoves()
         {
-            GameObject unit = new("Shield Unit");
-            unit.AddComponent<Rigidbody>();
-            unit.AddComponent<Health>();
-            EnemyBrain brain = unit.AddComponent<EnemyBrain>();
-
-            GameObject plate = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            plate.transform.SetParent(unit.transform, false);
-
+            GameObject player = new("Player");
             EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
             definition.Configure(
                 EnemyArchetype.Shield,
@@ -206,33 +199,56 @@ namespace PolarityProtocol.Tests
                 24f,
                 2.3f,
                 Color.yellow);
-            brain.Configure(
+
+            EnemyBrain brain = EnemyFactory.Create(
                 definition,
-                MagneticPolarity.Positive,
-                null,
-                new Renderer[0],
-                null,
-                plate.transform,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null);
+                player.transform,
+                Vector3.zero,
+                MagneticPolarity.Positive);
+            Rigidbody body = brain.GetComponent<Rigidbody>();
+            body.useGravity = false;
+            MagneticTarget target = brain.GetComponent<MagneticTarget>();
+            Transform plate = brain.transform.Find("Robot Model/Directional Shield");
+            Color bodyColor = brain.transform.Find("Robot Model/Torso")
+                .GetComponent<Renderer>().material.color;
+            Color plateColor = plate.GetComponent<Renderer>().material.color;
 
-            // A matching anchor staggers the unit but leaves the plate bolted on.
-            brain.NotifyMagneticForce(40f, brain.PlatePolarity);
-            Assert.That(plate.transform.parent, Is.EqualTo(unit.transform));
+            Assert.That(brain.PlatePolarity, Is.EqualTo(target.Polarity.Opposite()));
+            Assert.That(Vector4.Distance(bodyColor, RuntimeArt.Push), Is.LessThan(0.001f));
+            Assert.That(Vector4.Distance(plateColor, RuntimeArt.Pull), Is.LessThan(0.001f));
+            Assert.That(target.ResistsDisplacement, Is.True);
 
-            // The opposite anchor attracts the plate and strips it permanently.
-            brain.NotifyMagneticForce(40f, brain.PlatePolarity.Opposite());
+            // The anchor that would pull the body repels the matching-colour plate,
+            // so the attached pair remains braced.
+            target.ApplyMagneticForce(Vector3.right * 40f, null, brain.PlatePolarity);
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(plate.parent, Is.Not.Null);
+            Assert.That(Mathf.Abs(body.linearVelocity.x), Is.LessThan(0.001f));
+
+            // Match the body to attract and tear off its opposite-colour plate.
+            target.ApplyMagneticForce(
+                Vector3.left * 40f,
+                null,
+                brain.PlatePolarity.Opposite());
             yield return null;
 
-            Assert.That(plate.transform.parent, Is.Null);
+            Assert.That(plate.parent, Is.Null);
             Assert.That(brain.ShieldExposed, Is.True);
+            Assert.That(target.ResistsDisplacement, Is.False);
 
-            Object.Destroy(plate);
-            Object.Destroy(unit);
+            Object.Destroy(plate.gameObject);
+            yield return null;
+            body.linearVelocity = Vector3.zero;
+
+            // Switch to the plate colour, which is opposite the body, to pull it.
+            target.ApplyMagneticForce(Vector3.right * 40f, null, brain.PlatePolarity);
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(body.linearVelocity.x, Is.GreaterThan(0.05f));
+
+            Object.Destroy(brain.gameObject);
+            Object.Destroy(player);
             Object.Destroy(definition);
             yield return null;
         }

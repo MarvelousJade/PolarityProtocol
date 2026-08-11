@@ -10,7 +10,7 @@ Built with Unity `6000.4.11f1` and C#. The playable Windows development build is
 - Opposite polarities **pull** while matching polarities **push**.
 - Fight a randomized mix of blue negative and red positive enemies in every encounter.
 - Redirect red and blue shooter projectiles by bending them through an opposite-polarity field.
-- Displace shield units to expose them for three seconds.
+- Pull off each opposite-colour shield plate, then switch polarity to move the exposed body.
 - Push enemies into pulsing plasma hazards.
 - Clear three escalating encounters and earn a score based on time, damage, and redirections.
 

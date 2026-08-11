@@ -87,6 +87,11 @@ namespace PolarityProtocol.Tests
             Assert.That(projectile.WasRedirected, Is.True);
             Assert.That(projectile.Polarity, Is.EqualTo(MagneticPolarity.Negative));
 
+            // Once captured, isolate the projectile's bounded return steering from
+            // continued field acceleration at this synthetic test position.
+            Object.Destroy(oppositeAnchorObject);
+            yield return null;
+
             for (int i = 0; i < 30; i++)
             {
                 yield return new WaitForFixedUpdate();
@@ -96,7 +101,6 @@ namespace PolarityProtocol.Tests
             Assert.That(Vector3.Dot(projectile.Velocity.normalized, towardShooter), Is.GreaterThan(0.7f));
 
             projectile.Release();
-            Object.Destroy(oppositeAnchorObject);
             Object.Destroy(ability);
             Object.Destroy(enemy);
             Object.Destroy(player);

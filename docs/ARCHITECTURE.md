@@ -44,6 +44,8 @@ The solver follows:
 
 Enemy definitions carry their magnetic polarity, and their colour/indicator exposes it to the player. The opening blue chasers are negative, so red positive anchors pull them and blue negative anchors push them. Opposite polarities always attract; matching polarities repel.
 
+Most other world targets are positive. Shooter rounds alternate between positive red and negative blue polarity; an opposite-colour anchor attracts and captures them for redirection. After capture, bounded steering turns the round back toward its original shooter so the field deflection resolves into a readable return arc instead of an uncontrolled orbit.
+
 ### Combat
 
 `DamageInfo` is the shared message format. `DamageReceiver` forwards it to `Health`, and optional `IDamageModifier` components can transform it. The shield enemy uses this seam to reduce frontal damage without coupling projectile code to enemy types.

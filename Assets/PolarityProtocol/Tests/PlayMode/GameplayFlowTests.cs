@@ -46,26 +46,58 @@ namespace PolarityProtocol.Tests
         }
 
         [UnityTest]
-        public IEnumerator RedirectedProjectile_ChangesFactionAndOwnership()
+        public IEnumerator OppositePolarityField_CurvesProjectileBackToShooter()
         {
             GameObject poolObject = new("Projectile Pool");
             ProjectilePool pool = poolObject.AddComponent<ProjectilePool>();
             GameObject enemy = new("Enemy Owner");
+            enemy.transform.position = Vector3.back * 20f;
             GameObject player = new("Player Owner");
 
             Projectile projectile = pool.Spawn(
                 CombatFaction.Enemy,
                 enemy,
-                Vector3.zero,
+                Vector3.right * 2f,
                 Vector3.forward * 10f,
                 10f,
-                Color.red);
-            projectile.RedirectByPlayer(player);
+                Color.blue,
+                MagneticPolarity.Negative);
+            Assert.That(projectile.Velocity.z, Is.EqualTo(10f).Within(0.01f));
+
+            AbilityDefinition ability = ScriptableObject.CreateInstance<AbilityDefinition>();
+            ability.ConfigureDemoDefaults();
+
+            GameObject matchingAnchorObject = new("Matching Anchor");
+            MagneticAnchor matchingAnchor = matchingAnchorObject.AddComponent<MagneticAnchor>();
+            matchingAnchor.Initialize(ability, MagneticPolarity.Negative, player);
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(projectile.Faction, Is.EqualTo(CombatFaction.Enemy));
+            Assert.That(projectile.WasRedirected, Is.False);
+
+            Object.Destroy(matchingAnchorObject);
+            yield return null;
+
+            GameObject oppositeAnchorObject = new("Opposite Anchor");
+            MagneticAnchor oppositeAnchor = oppositeAnchorObject.AddComponent<MagneticAnchor>();
+            oppositeAnchor.Initialize(ability, MagneticPolarity.Positive, player);
+            yield return new WaitForFixedUpdate();
 
             Assert.That(projectile.Faction, Is.EqualTo(CombatFaction.Player));
             Assert.That(projectile.WasRedirected, Is.True);
+            Assert.That(projectile.Polarity, Is.EqualTo(MagneticPolarity.Negative));
+
+            for (int i = 0; i < 30; i++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            Vector3 towardShooter = (enemy.transform.position + Vector3.up - projectile.transform.position).normalized;
+            Assert.That(Vector3.Dot(projectile.Velocity.normalized, towardShooter), Is.GreaterThan(0.7f));
 
             projectile.Release();
+            Object.Destroy(oppositeAnchorObject);
+            Object.Destroy(ability);
             Object.Destroy(enemy);
             Object.Destroy(player);
             Object.Destroy(poolObject);

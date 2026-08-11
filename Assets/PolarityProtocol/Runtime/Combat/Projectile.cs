@@ -7,6 +7,11 @@ namespace PolarityProtocol.Combat
     [RequireComponent(typeof(Rigidbody), typeof(SphereCollider))]
     public sealed class Projectile : MonoBehaviour
     {
+        private const float RedirectTurnRate = 7.5f;
+        private const float RedirectAcceleration = 28f;
+        private const float RedirectMinimumSpeed = 14f;
+        private const float RedirectMaximumSpeed = 22f;
+
         private Rigidbody body;
         private Renderer visual;
         private Material visualMaterial;
@@ -17,9 +22,15 @@ namespace PolarityProtocol.Combat
         private float damage;
         private float lifetime;
         private bool released;
+        private Color polarityColor;
+        private MagneticTarget magneticTarget;
+        private Transform redirectTarget;
 
         public CombatFaction Faction => faction;
         public bool WasRedirected { get; private set; }
+        public MagneticPolarity Polarity => magneticTarget == null
+            ? MagneticPolarity.Positive
+            : magneticTarget.Polarity;
         public Vector3 Velocity => body == null ? Vector3.zero : body.linearVelocity;
 
         private void Awake()
@@ -28,6 +39,7 @@ namespace PolarityProtocol.Combat
             visual = GetComponent<Renderer>();
             visualMaterial = visual == null ? null : visual.material;
             trail = GetComponent<TrailRenderer>();
+            magneticTarget = GetComponent<MagneticTarget>();
         }
 
         private void Update()
@@ -36,6 +48,38 @@ namespace PolarityProtocol.Combat
             if (lifetime <= 0f)
             {
                 Release();
+            }
+        }
+
+        private void FixedUpdate()
+        {
+            if (!WasRedirected || redirectTarget == null || body == null)
+            {
+                return;
+            }
+
+            Vector3 targetPoint = redirectTarget.position + Vector3.up;
+            Vector3 toTarget = targetPoint - transform.position;
+            if (toTarget.sqrMagnitude <= 0.04f)
+            {
+                return;
+            }
+
+            Vector3 currentVelocity = body.linearVelocity;
+            float speed = Mathf.Clamp(
+                currentVelocity.magnitude,
+                RedirectMinimumSpeed,
+                RedirectMaximumSpeed);
+            Vector3 steeredVelocity = Vector3.RotateTowards(
+                currentVelocity.sqrMagnitude > 0.01f ? currentVelocity : transform.forward * speed,
+                toTarget.normalized * speed,
+                RedirectTurnRate * Time.fixedDeltaTime,
+                RedirectAcceleration * Time.fixedDeltaTime);
+            body.linearVelocity = Vector3.ClampMagnitude(steeredVelocity, RedirectMaximumSpeed);
+
+            if (body.linearVelocity.sqrMagnitude > 0.01f)
+            {
+                transform.forward = body.linearVelocity.normalized;
             }
         }
 
@@ -86,12 +130,16 @@ namespace PolarityProtocol.Combat
             Vector3 position,
             Vector3 velocity,
             float projectileDamage,
-            Color color)
+            Color color,
+            MagneticPolarity projectilePolarity = MagneticPolarity.Positive)
         {
             pool = owningPool;
             faction = projectileFaction;
             owner = projectileOwner;
             damage = projectileDamage;
+            polarityColor = color;
+            redirectTarget = null;
+            magneticTarget?.Configure(projectilePolarity, 2.2f);
             lifetime = 8f;
             released = false;
             WasRedirected = false;
@@ -111,13 +159,16 @@ namespace PolarityProtocol.Combat
                 return;
             }
 
+            redirectTarget = owner == null ? null : owner.transform;
             faction = CombatFaction.Player;
             owner = anchorOwner;
             WasRedirected = true;
             damage *= 1.6f;
             lifetime = Mathf.Max(lifetime, 3f);
 
-            SetVisualColor(RuntimeArt.Pull, 3f);
+            // Ownership changes, but magnetic polarity does not. Keep the red/blue
+            // polarity read intact and use stronger emission to confirm the redirect.
+            SetVisualColor(polarityColor, 3.5f);
             Arena.GameSession.Active?.RegisterRedirect();
         }
 

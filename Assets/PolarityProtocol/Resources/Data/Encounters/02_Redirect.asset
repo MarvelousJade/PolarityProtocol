@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: 02_Redirect
   m_EditorClassIdentifier: PolarityProtocol.Runtime::PolarityProtocol.Data.EncounterDefinition
   displayName: ENCOUNTER 02 // REDIRECT
-  objective: Curve violet projectiles through an anchor field and return them to
-    a robot.
+  objective: Use the opposite-colour anchor to curve red and blue projectiles back
+    at a robot.
   spawns:
   - archetype: 1
     position: {x: -12, y: 1, z: 9}

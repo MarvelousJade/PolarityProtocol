@@ -9,7 +9,7 @@ Built with Unity `6000.4.11f1` and C#. The playable Windows development build is
 - Place up to two persistent magnetic anchors on arena surfaces.
 - Opposite polarities **pull** while matching polarities **push**.
 - Pull blue negative enemies with a red positive anchor, then repel them with blue.
-- Redirect shooter projectiles by bending them through a player-owned field.
+- Redirect red and blue shooter projectiles by bending them through an opposite-polarity field.
 - Displace shield units to expose them for three seconds.
 - Push enemies into pulsing plasma hazards.
 - Clear three escalating encounters and earn a score based on time, damage, and redirections.

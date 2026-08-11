@@ -10,7 +10,7 @@ namespace PolarityProtocol.Magnetics
     {
         public static string Label(this MagneticPolarity polarity)
         {
-            return polarity == MagneticPolarity.Negative ? "BLUE" : "RED";
+            return polarity == MagneticPolarity.Negative ? "BLUE (-)" : "RED (+)";
         }
 
         public static MagneticPolarity Opposite(this MagneticPolarity polarity)

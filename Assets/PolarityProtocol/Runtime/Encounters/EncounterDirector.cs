@@ -300,7 +300,7 @@ namespace PolarityProtocol.Encounters
                 aimLine.positionCount = 2;
                 aimLine.startWidth = 0.045f;
                 aimLine.endWidth = 0.012f;
-                aimLine.sharedMaterial = RuntimeArt.Material(definition.Accent, 1.2f, true);
+                aimLine.sharedMaterial = RuntimeArt.Material(Color.white, 1.2f, true);
                 aimObject.SetActive(false);
             }
 

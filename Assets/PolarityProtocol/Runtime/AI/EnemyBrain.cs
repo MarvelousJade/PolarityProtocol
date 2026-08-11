@@ -52,6 +52,7 @@ namespace PolarityProtocol.AI
         private bool configured;
         private bool plateTornOff;
         private MagneticPolarity platePolarity = MagneticPolarity.Positive;
+        private MagneticPolarity loadedProjectilePolarity = MagneticPolarity.Positive;
 
         public static int ActiveCount { get; private set; }
         public EnemyState State { get; private set; } = EnemyState.Acquiring;
@@ -213,6 +214,11 @@ namespace PolarityProtocol.AI
             // Plate polarity is rolled per unit so its colour tells the player which
             // anchor tears it off -- the opposite one.
             platePolarity = Random.value < 0.5f
+                ? MagneticPolarity.Negative
+                : MagneticPolarity.Positive;
+            // Shooter rounds alternate after a random first polarity. Telegraphing the
+            // loaded colour gives the player time to select the opposite anchor.
+            loadedProjectilePolarity = Random.value < 0.5f
                 ? MagneticPolarity.Negative
                 : MagneticPolarity.Positive;
             healthBarRoot = barRoot;
@@ -382,13 +388,18 @@ namespace PolarityProtocol.AI
             {
                 Vector3 origin = transform.position + Vector3.up * 1.3f + transform.forward * 0.8f;
                 Vector3 aim = (target.position + Vector3.up - origin).normalized;
+                Color projectileColor = loadedProjectilePolarity == MagneticPolarity.Negative
+                    ? RuntimeArt.Pull
+                    : RuntimeArt.Push;
                 ProjectilePool.Active?.Spawn(
                     CombatFaction.Enemy,
                     gameObject,
                     origin,
                     aim * definition.ProjectileSpeed,
                     definition.AttackDamage,
-                    definition.Accent);
+                    projectileColor,
+                    loadedProjectilePolarity);
+                loadedProjectilePolarity = loadedProjectilePolarity.Opposite();
                 CameraRig.Active?.AddTrauma(0.045f);
             }
             else if (distance <= definition.AttackRange + 0.85f)
@@ -516,9 +527,14 @@ namespace PolarityProtocol.AI
                 if (telegraphing && target != null)
                 {
                     float alpha = 0.35f + (Mathf.Sin(Time.time * 20f) + 1f) * 0.22f;
-                    Color aimColor = new(baseColor.r, baseColor.g, baseColor.b, alpha);
+                    Color telegraphColor = definition.Archetype == EnemyArchetype.Shooter
+                        ? loadedProjectilePolarity == MagneticPolarity.Negative
+                            ? RuntimeArt.Pull
+                            : RuntimeArt.Push
+                        : baseColor;
+                    Color aimColor = new(telegraphColor.r, telegraphColor.g, telegraphColor.b, alpha);
                     aimLine.startColor = aimColor;
-                    aimLine.endColor = new Color(baseColor.r, baseColor.g, baseColor.b, 0.05f);
+                    aimLine.endColor = new Color(telegraphColor.r, telegraphColor.g, telegraphColor.b, 0.05f);
                     aimLine.SetPosition(0, transform.position + Vector3.up * 1.35f + transform.forward * 0.65f);
                     aimLine.SetPosition(1, target.position + Vector3.up);
                 }

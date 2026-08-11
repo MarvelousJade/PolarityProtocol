@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="status-bar" class="status-bar" picking-mode="Ignore">
+        <ui:VisualElement class="status-track" picking-mode="Ignore">
+            <ui:VisualElement name="status-fill" class="status-fill status-fill-neutral" picking-mode="Ignore" />
+            <ui:Label name="status-label" text="STATUS" class="status-label" picking-mode="Ignore" />
+            <ui:Label name="status-value" text="" class="status-value" picking-mode="Ignore" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

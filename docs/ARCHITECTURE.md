@@ -21,7 +21,7 @@ PlayerCombat / EnemyBrain
 GameSession
   ├─ owns run state, timing, damage, redirects, and score
   ├─ starts EncounterDirector
-  └─ supplies read-only state to HudController
+  └─ supplies read-only state to HudController (UI Toolkit)
 ```
 
 ## Boundaries
@@ -68,7 +68,11 @@ Magnetic force never directly edits AI state internals; `MagneticTarget` reports
 
 ### Presentation
 
-`ArenaBootstrap` constructs the procedural arena and composition root. `RuntimeArt` is a small factory for primitive presentation. HUD, audio feedback, camera, and debug visuals read gameplay state without owning simulation rules.
+`ArenaBootstrap` constructs the procedural arena and composition root. `RuntimeArt` is a small factory for primitive presentation. Audio feedback, camera, and debug visuals read gameplay state without owning simulation rules.
+
+Player-facing UI is a single focused Unity UI Toolkit document created by `HudController`. `PolarityInterface.uxml` defines the intro/tutorial, combat HUD, pause, failure, and results screens; `PolarityStyles.uss` owns responsive presentation; and C# updates state, progress, focus, and button events. `StatusBar.uxml` is instantiated for health, energy, dash, and anchor status instead of introducing a broader UI framework. Keyboard and controller movement/submit events share the same focused button path.
+
+`DebugOverlay` deliberately remains IMGUI. Its F3-only `OnGUI` path is isolated from the player interface and only performs enemy enumeration while diagnostics are visible.
 
 ## Allocation strategy
 
@@ -77,7 +81,8 @@ Magnetic force never directly edits AI state internals; `MagneticTarget` reports
 - Projectiles use `ComponentPool<Projectile>`.
 - Projectile, preview, enemy, and hazard materials are cached rather than recreated during updates.
 - Feedback tones are synthesized once and replayed from a prewarmed clip bank.
-- Expensive enemy enumeration is restricted to the opt-in diagnostics HUD; the benchmark uses `EnemyBrain.ActiveCount`.
+- Player-facing UI text is refreshed at 10 Hz and only changed when its source value changes; progress widths reuse cached elements.
+- Expensive enemy enumeration is restricted to the opt-in IMGUI diagnostics overlay; the benchmark uses `EnemyBrain.ActiveCount`.
 
 ## Content generation
 

@@ -2,7 +2,8 @@
 
 ## Test environment
 
-- Date: 2026-07-23
+- Baseline/optimization date: 2026-07-23
+- UI Toolkit migration validation: 2026-08-11
 - Unity: `6000.4.11f1`
 - Build: Windows x64, Mono, Development Build
 - Resolution: 1280×720
@@ -36,19 +37,19 @@ Run it with:
 
 ## Results
 
-| Measurement | Before optimization | After optimization |
-|---|---:|---:|
-| Peak enemies | 21 | 21 |
-| Peak projectiles | 120 | 120 |
-| Average frame | 8.45 ms | 8.53 ms |
-| Average FPS | 118.3 | 117.2 |
-| Sampled main thread | 8.32 ms | 8.75 ms |
-| Worst observed frame | 203.96 ms | 249.00 ms |
-| Gen-0 collections | 17 | 4 |
-| Last-frame GC allocation | 0.16 KB | 0.20 KB |
-| Sampled used memory | 142.9 MB | 143.2 MB |
+| Measurement | Before optimization | After optimization | UI Toolkit migration |
+|---|---:|---:|---:|
+| Peak enemies | 21 | 21 | 21 |
+| Peak projectiles | 120 | 120 | 120 |
+| Average frame | 8.45 ms | 8.53 ms | 9.38 ms |
+| Average FPS | 118.3 | 117.2 | 106.7 |
+| Sampled main thread | 8.32 ms | 8.75 ms | 8.32 ms |
+| Worst observed frame | 203.96 ms | 249.00 ms | 1599.70 ms |
+| Gen-0 collections | 17 | 4 | 2 |
+| Last-frame GC allocation | 0.16 KB | 0.20 KB | 0.43 KB |
+| Sampled used memory | 142.9 MB | 143.2 MB | 151.0 MB |
 
-The average frame difference is within run-to-run variance. The meaningful change is Gen-0 collection count: **17 → 4**, a **76% reduction**, under the same entity and projectile load.
+The latest packaged-player run validates the UI Toolkit migration under the same 21-enemy/120-projectile workload. Sampled main-thread time remained at **8.32 ms**, while the one-run average was **9.38 ms** and memory was **151.0 MB**. Gen-0 collections are now **17 → 2** versus the original baseline. The 1.6-second worst frame occurred during workload/UI warm-up and is retained rather than filtered out.
 
 ## Optimization
 
@@ -60,9 +61,10 @@ The optimized implementation:
 2. maps each requested pulse to the nearest cached tone;
 3. replays clips through `AudioSource.PlayOneShot`;
 4. destroys the bank only when the feedback system is torn down; and
-5. replaces benchmark enemy enumeration with `EnemyBrain.ActiveCount`.
+5. replaces benchmark enemy enumeration with `EnemyBrain.ActiveCount`; and
+6. keeps one UI Toolkit document alive, caches queried elements, and refreshes changing text at 10 Hz.
 
-Projectile materials and placement-preview materials were also converted from repeated construction to cached material updates before the second measurement.
+Projectile materials and placement-preview materials were also converted from repeated construction to cached material updates before the second measurement. The third measurement uses the migrated UXML/USS interface and the isolated F3 IMGUI diagnostics overlay.
 
 ## Existing safeguards
 
@@ -71,12 +73,14 @@ Projectile materials and placement-preview materials were also converted from re
 - AI movement runs in `FixedUpdate`, while decisions avoid scene searches.
 - Rigidbody references and materials are cached.
 - Force debug lines are allocated lazily and only enabled with `F3`.
-- Debug enemy enumeration occurs only while the diagnostics HUD is open.
+- UI Toolkit reuses one document and cached element references; player-facing text refreshes at 10 Hz and only on value changes.
+- Debug enemy enumeration occurs only while the F3 IMGUI diagnostics overlay is open.
 
 ## Interpretation and caveats
 
 - This is a short development-build benchmark, not a shipping hardware certification.
-- Worst-frame values include workload creation and shader/runtime warm-up; average and collection count are more representative of sustained behavior.
+- Worst-frame values include workload creation, UI/style initialization, and shader/runtime warm-up; average and collection count are more representative of sustained behavior.
+- The three columns are individual runs on the same machine, not statistical aggregates; use them as regression evidence rather than a hardware certification.
 - The Unity `Draw Calls Count` recorder returned no value in this packaged batch configuration. It is therefore reported as unavailable, not as zero draw calls.
 - Player input is not simulated during the benchmark, but the full AI, projectile, collision, magnetic-target, audio, rendering, and encounter loops remain active.
 - A release build should be profiled separately before distribution because development instrumentation changes timing and size.

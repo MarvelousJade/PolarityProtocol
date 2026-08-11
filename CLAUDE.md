@@ -89,7 +89,7 @@ A target configured `resistsDisplacement` (the shield robot) still reports the f
 
 ### UI
 
-The HUD is IMGUI — `HudController.OnGUI`, ~350 lines drawing intro, objectives, health, energy, pause, and results. There is no Canvas, no uGUI, no UI Toolkit document; adding one would be the only such rig in the project.
+Player-facing UI uses one runtime Unity UI Toolkit document created by `HudController`. Structure lives in `Resources/UI/PolarityInterface.uxml`, shared status-bar structure in `StatusBar.uxml`, and presentation in `PolarityStyles.uss`; C# owns state, cached value updates, focus, and button events. Keep this as a focused UI layer rather than introducing a UI framework or third-party dependency. The F3 `DebugOverlay.OnGUI` path intentionally remains IMGUI for developer diagnostics only.
 
 ### Input
 

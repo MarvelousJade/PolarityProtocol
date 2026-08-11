@@ -63,23 +63,8 @@ namespace PolarityProtocol.Arena
 
         private void Update()
         {
-            if (State == SessionState.Intro)
+            if (State is SessionState.Intro or SessionState.Complete or SessionState.Failed)
             {
-                if (Input.GetKeyDown(KeyCode.Return) ||
-                    Input.GetKeyDown(KeyCode.JoystickButton0))
-                {
-                    BeginRun();
-                }
-                return;
-            }
-
-            if (State is SessionState.Complete or SessionState.Failed)
-            {
-                if (Input.GetKeyDown(KeyCode.Return) ||
-                    Input.GetKeyDown(KeyCode.JoystickButton0))
-                {
-                    Restart();
-                }
                 return;
             }
 

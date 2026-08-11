@@ -14,7 +14,7 @@ Built with Unity `6000.4.11f1` and C#. The playable Windows development build is
 - Push enemies into pulsing plasma hazards.
 - Clear three escalating encounters and earn a score based on time, damage, and redirections.
 
-The demo has an intro screen, tutorial objectives, pause/restart flow, failure recovery, completion scoring, camera shake, hit stop, synthesized feedback audio, and a runtime diagnostics mode.
+The demo has a responsive Unity UI Toolkit intro/tutorial, combat HUD, pause/restart flow, failure recovery, completion scoring, camera shake, hit stop, synthesized feedback audio, and an IMGUI runtime diagnostics mode.
 
 ## Controls
 
@@ -29,6 +29,8 @@ The demo has an intro screen, tutorial objectives, pause/restart flow, failure r
 | Dash | `Space` | `B` |
 | Sprint | `Shift` | Left stick press |
 | Pause | `Esc` | Menu |
+| Navigate menus | Arrow keys / `W` / `S` | Left stick |
+| Select | `Enter` / `Space` | `A` |
 | Diagnostics | `F3` | Keyboard only |
 
 ## Technical features
@@ -41,17 +43,21 @@ The demo has an intro screen, tutorial objectives, pause/restart flow, failure r
 - Generic component pool used by the projectile pool
 - Procedurally assembled arena and presentation; no marketplace gameplay packages
 - Camera-relative movement, orbit/collision camera, dash, mouse, keyboard, and controller input
-- Runtime force vectors, AI states, targeting ranges, active counts, and frame-rate diagnostics
+- Responsive runtime HUD, tutorial, pause, failure, and results interfaces built with reusable Unity UI Toolkit UXML/USS components
+- Focused keyboard/controller menu navigation and C# state/event wiring without a third-party UI dependency
+- Runtime force vectors, AI states, targeting ranges, active counts, and frame-rate diagnostics retained as an IMGUI developer overlay
 - Encounter authoring window with draggable spawn handles, range preview, and bounds/separation validation
 - Dedicated stress scene and packaged-player benchmark mode
-- Six Edit Mode tests and three Play Mode tests
+- Six Edit Mode tests and six Play Mode tests
 
 ## Project layout
 
 ```text
 Assets/PolarityProtocol/
 ├── Editor/                    # Project builder and encounter authoring tool
-├── Resources/Data/            # Generated ScriptableObject tuning assets
+├── Resources/
+│   ├── Data/                  # Generated ScriptableObject tuning assets
+│   └── UI/                    # Runtime UI Toolkit UXML, USS, and theme
 ├── Runtime/
 │   ├── Abilities/
 │   ├── AI/
@@ -121,7 +127,7 @@ Run the suites from Unity Test Runner, or use:
 Verified locally:
 
 - Edit Mode: **6/6 passed**
-- Play Mode: **3/3 passed**
+- Play Mode: **6/6 passed**
 - Windows x64 development player: **build succeeded**
 - Packaged-player smoke run: **no runtime exceptions**
 
@@ -131,10 +137,10 @@ The reproducible stress workload adds 18 robots and 120 projectiles to the openi
 
 - 21 peak enemies
 - 120 peak projectiles
-- 117.2 average FPS / 8.53 ms average frame
-- 8.75 ms sampled main-thread time
-- 143.2 MB sampled used memory
-- Gen-0 collections reduced from 17 to 4 after pooling synthesized feedback clips and removing diagnostic array queries
+- 106.7 average FPS / 9.38 ms average frame after the UI Toolkit migration
+- 8.32 ms sampled main-thread time
+- 151.0 MB sampled used memory
+- Gen-0 collections reduced from 17 to 2 after pooled feedback and cached UI/diagnostic update paths
 
 Full methodology and caveats are in [Performance](docs/PERFORMANCE.md).
 
@@ -143,7 +149,7 @@ Full methodology and caveats are in [Performance](docs/PERFORMANCE.md).
 - Presentation is intentionally procedural: primitive models, generated materials, simple robot motion, and synthesized tones.
 - Enemy navigation uses local steering and arena collision rather than a baked NavMesh.
 - The legacy input map targets Xbox-style Windows controllers; unusual controller layouts may need axis remapping.
-- The development build prioritizes inspection over distribution size and is approximately 140.8 MiB.
+- The development build prioritizes inspection over distribution size and is approximately 141.6 MiB.
 - No gameplay video or GIF is checked in yet.
 - The batch benchmark could not retrieve the draw-call counter on this Unity/player configuration; the report marks it unavailable rather than presenting zero as a real count.
 

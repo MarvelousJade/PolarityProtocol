@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="interface-root" class="interface-root" picking-mode="Ignore">
+        <ui:VisualElement name="gameplay-screen" class="screen gameplay-screen is-hidden" picking-mode="Ignore">
+            <ui:VisualElement name="damage-vignette" class="damage-vignette" picking-mode="Ignore" />
+
+            <ui:VisualElement class="hud-panel objective-panel" picking-mode="Ignore">
+                <ui:Label name="encounter-title" text="SYSTEM READY" class="hud-heading" picking-mode="Ignore" />
+                <ui:VisualElement class="panel-rule panel-rule-push" picking-mode="Ignore" />
+                <ui:Label name="encounter-objective" text="Deploy anchors. Rewrite the battlefield." class="objective-copy" picking-mode="Ignore" />
+            </ui:VisualElement>
+
+            <ui:Label name="encounter-summary" text="HOSTILES  00      TIME  00:00" class="encounter-summary" picking-mode="Ignore" />
+
+            <ui:VisualElement class="hud-panel health-panel" picking-mode="Ignore">
+                <ui:Label text="INTEGRITY" class="eyebrow" picking-mode="Ignore" />
+                <ui:VisualElement name="health-bar-host" class="status-host status-host-large" picking-mode="Ignore" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="ability-panel" class="hud-panel ability-panel polarity-pull" picking-mode="Ignore">
+                <ui:VisualElement class="ability-header" picking-mode="Ignore">
+                    <ui:Label name="polarity-title" text="PULL ANCHOR" class="hud-heading" picking-mode="Ignore" />
+                    <ui:Label name="anchor-count" text="0 / 2 ACTIVE" class="micro-copy" picking-mode="Ignore" />
+                </ui:VisualElement>
+                <ui:VisualElement name="energy-bar-host" class="status-host status-host-energy" picking-mode="Ignore" />
+                <ui:VisualElement class="cooldown-row" picking-mode="Ignore">
+                    <ui:VisualElement name="dash-bar-host" class="status-host status-host-small" picking-mode="Ignore" />
+                    <ui:VisualElement name="anchor-bar-host" class="status-host status-host-small" picking-mode="Ignore" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement name="crosshair" class="crosshair polarity-pull" picking-mode="Ignore">
+                <ui:VisualElement class="crosshair-line crosshair-left" picking-mode="Ignore" />
+                <ui:VisualElement class="crosshair-line crosshair-right" picking-mode="Ignore" />
+                <ui:VisualElement class="crosshair-line crosshair-top" picking-mode="Ignore" />
+                <ui:VisualElement class="crosshair-line crosshair-bottom" picking-mode="Ignore" />
+                <ui:VisualElement class="crosshair-dot" picking-mode="Ignore" />
+            </ui:VisualElement>
+
+            <ui:Label text="LMB FIRE   •   RMB DEPLOY   •   Q POLARITY   •   R RECALL   •   F3 DEBUG" class="gameplay-hint" picking-mode="Ignore" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="intro-screen" class="screen intro-screen">
+            <ui:VisualElement class="polarity-rail polarity-rail-pull" picking-mode="Ignore" />
+            <ui:VisualElement class="polarity-rail polarity-rail-push" picking-mode="Ignore" />
+            <ui:VisualElement class="intro-content">
+                <ui:Label text="POLARITY PROTOCOL" class="display-title" picking-mode="Ignore" />
+                <ui:Label text="CONTROL THE FORCE. REWRITE THE FIGHT." class="display-subtitle" picking-mode="Ignore" />
+
+                <ui:VisualElement class="intro-card">
+                    <ui:Label text="Deploy two magnetic anchors. Opposite polarity PULLS; matching polarity PUSHES. Move robots into hazards and bend hostile projectiles back at their owners." class="intro-copy" picking-mode="Ignore" />
+                    <ui:VisualElement class="controls-row">
+                        <ui:VisualElement class="control-column" picking-mode="Ignore">
+                            <ui:Label text="KEYBOARD + MOUSE" class="control-title" picking-mode="Ignore" />
+                            <ui:Label text="WASD  Move     •     Mouse  Aim\nLMB  Fire       •     RMB  Anchor\nQ  Polarity     •     Space  Dash\nR  Recall       •     Esc  Pause\nF3  Diagnostics" class="control-copy" picking-mode="Ignore" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="control-divider" picking-mode="Ignore" />
+                        <ui:VisualElement class="control-column" picking-mode="Ignore">
+                            <ui:Label text="XBOX-STYLE CONTROLLER" class="control-title" picking-mode="Ignore" />
+                            <ui:Label text="Left Stick  Move     •     Right Stick  Aim\nRB / A  Fire          •     LB  Anchor\nX  Polarity           •     B  Dash\nY  Recall             •     Menu  Pause" class="control-copy" picking-mode="Ignore" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:Button name="start-button" text="INITIATE  [ ENTER / A ]" class="action-button action-button-primary" />
+                <ui:Label text="THREE ENCOUNTERS  //  FIVE MINUTE COMBAT SLICE  //  F3 RUNTIME DIAGNOSTICS" class="footer-copy" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="pause-screen" class="screen modal-screen is-hidden">
+            <ui:VisualElement class="modal-card pause-card">
+                <ui:VisualElement class="modal-accent modal-accent-pull" picking-mode="Ignore" />
+                <ui:Label text="SIMULATION PAUSED" class="modal-title" picking-mode="Ignore" />
+                <ui:Label text="Your anchor fields are suspended.\nResume when ready." class="modal-copy" picking-mode="Ignore" />
+                <ui:Button name="resume-button" text="RESUME  [ ESC / MENU ]" class="action-button action-button-primary" />
+                <ui:Button name="pause-restart-button" text="RESTART RUN" class="action-button action-button-secondary" />
+                <ui:Label text="↑ / ↓  OR LEFT STICK  NAVIGATE     •     ENTER / A  SELECT" class="navigation-hint" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="failure-screen" class="screen modal-screen outcome-screen is-hidden">
+            <ui:VisualElement class="modal-card outcome-card">
+                <ui:VisualElement class="modal-accent modal-accent-push" picking-mode="Ignore" />
+                <ui:Label text="SYSTEM COLLAPSE" class="modal-title" picking-mode="Ignore" />
+                <ui:Label text="ADAPT. REDEPLOY. TRY AGAIN." class="outcome-subtitle" picking-mode="Ignore" />
+                <ui:VisualElement class="metric-list" picking-mode="Ignore">
+                    <ui:VisualElement class="metric-row"><ui:Label text="COMPLETION TIME" class="metric-name" /><ui:Label name="failure-time" text="00:00" class="metric-value" /></ui:VisualElement>
+                    <ui:VisualElement class="metric-row"><ui:Label text="DAMAGE TAKEN" class="metric-name" /><ui:Label name="failure-damage" text="0" class="metric-value" /></ui:VisualElement>
+                    <ui:VisualElement class="metric-row"><ui:Label text="REDIRECTIONS" class="metric-name" /><ui:Label name="failure-redirects" text="0" class="metric-value" /></ui:VisualElement>
+                    <ui:VisualElement class="metric-row metric-score"><ui:Label text="SCORE" class="metric-name metric-score-name" /><ui:Label name="failure-score" text="00000" class="metric-value metric-score-value" /></ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Button name="retry-button" text="REDEPLOY  [ ENTER / A ]" class="action-button action-button-primary" />
+                <ui:Label text="KEYBOARD + CONTROLLER NAVIGATION ENABLED" class="navigation-hint" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="results-screen" class="screen modal-screen outcome-screen is-hidden">
+            <ui:VisualElement class="modal-card outcome-card">
+                <ui:VisualElement class="modal-accent modal-accent-pull" picking-mode="Ignore" />
+                <ui:Label text="PROTOCOL COMPLETE" class="modal-title" picking-mode="Ignore" />
+                <ui:Label text="THE ARENA IS YOUR WEAPON." class="outcome-subtitle" picking-mode="Ignore" />
+                <ui:VisualElement class="metric-list" picking-mode="Ignore">
+                    <ui:VisualElement class="metric-row"><ui:Label text="COMPLETION TIME" class="metric-name" /><ui:Label name="results-time" text="00:00" class="metric-value" /></ui:VisualElement>
+                    <ui:VisualElement class="metric-row"><ui:Label text="DAMAGE TAKEN" class="metric-name" /><ui:Label name="results-damage" text="0" class="metric-value" /></ui:VisualElement>
+                    <ui:VisualElement class="metric-row"><ui:Label text="REDIRECTIONS" class="metric-name" /><ui:Label name="results-redirects" text="0" class="metric-value" /></ui:VisualElement>
+                    <ui:VisualElement class="metric-row metric-score"><ui:Label text="SCORE" class="metric-name metric-score-name" /><ui:Label name="results-score" text="00000" class="metric-value metric-score-value" /></ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Button name="results-restart-button" text="RESTART  [ ENTER / A ]" class="action-button action-button-primary" />
+                <ui:Label text="KEYBOARD + CONTROLLER NAVIGATION ENABLED" class="navigation-hint" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

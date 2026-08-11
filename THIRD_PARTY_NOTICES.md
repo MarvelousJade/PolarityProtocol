@@ -4,8 +4,8 @@ Polarity Protocol does not include imported third-party art, audio, animation, f
 
 The project uses:
 
-- Unity Engine runtime and editor components;
-- Unity built-in primitive meshes, shaders, and default resources;
+- Unity Engine runtime and editor components, including runtime UI Toolkit;
+- Unity built-in primitive meshes, shaders, UI theme, and default resources;
 - Unity Test Framework `1.6.0`;
 - Unity's NUnit integration through `com.unity.ext.nunit`; and
 - Visual Studio Editor package `2.0.25`.

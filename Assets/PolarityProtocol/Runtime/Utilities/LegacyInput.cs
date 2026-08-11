@@ -48,6 +48,14 @@ namespace PolarityProtocol.Utilities
             Input.GetKeyDown(KeyCode.Escape) ||
             Input.GetKeyDown(KeyCode.JoystickButton7);
 
+        public static float MenuNavigationVertical => Input.GetAxisRaw("Vertical");
+
+        public static bool MenuSubmitPressed =>
+            Input.GetKeyDown(KeyCode.Return) ||
+            Input.GetKeyDown(KeyCode.KeypadEnter) ||
+            Input.GetKeyDown(KeyCode.Space) ||
+            Input.GetKeyDown(KeyCode.JoystickButton0);
+
         public static bool DebugPressed => Input.GetKeyDown(KeyCode.F3);
 
         private static float SafeAxis(string axis)

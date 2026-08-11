@@ -48,7 +48,7 @@ The demo has a responsive Unity UI Toolkit intro/tutorial, combat HUD, pause/res
 - Runtime force vectors, AI states, targeting ranges, active counts, and frame-rate diagnostics retained as an IMGUI developer overlay
 - Encounter authoring window with draggable spawn handles, range preview, and bounds/separation validation
 - Dedicated stress scene and packaged-player benchmark mode
-- Six Edit Mode tests and six Play Mode tests
+- Twelve Edit Mode tests and nine Play Mode tests
 
 ## Project layout
 
@@ -144,8 +144,8 @@ Run the suites from Unity Test Runner, or use:
 
 Verified locally:
 
-- Edit Mode: **6/6 passed**
-- Play Mode: **6/6 passed**
+- Edit Mode: **12/12 passed**
+- Play Mode: **9/9 passed**
 - Windows x64 development player: **build succeeded**
 - Packaged-player smoke run: **no runtime exceptions**
 
@@ -155,9 +155,9 @@ The reproducible stress workload adds 18 robots and 120 projectiles to the openi
 
 - 21 peak enemies
 - 120 peak projectiles
-- 106.7 average FPS / 9.38 ms average frame after the UI Toolkit migration
-- 8.32 ms sampled main-thread time
-- 151.0 MB sampled used memory
+- 106.7 average FPS / 9.38 ms average frame in the conservative UI Toolkit feature run
+- 8.32 ms sampled main-thread time in both latest feature runs
+- 151.0 MB sampled used memory in the UI Toolkit feature run
 - Gen-0 collections reduced from 17 to 2 after pooled feedback and cached UI/diagnostic update paths
 
 Full methodology and caveats are in [Performance](docs/PERFORMANCE.md).

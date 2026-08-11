@@ -6,10 +6,18 @@ namespace PolarityProtocol.Combat
     [RequireComponent(typeof(Collider))]
     public sealed class Hazard : MonoBehaviour
     {
-        private const float AvoidMargin = 1.4f;
-        private const float AvoidWeight = 2.4f;
+        // The enemy capsule has a 0.55 m radius. Extra clearance around the full
+        // visual footprint prevents collision momentum from putting its body over
+        // plasma even though the damaging trigger itself is slightly smaller.
+        private const float EnemyClearance = 1.35f;
+        private const float AvoidDistance = 2.5f;
+        private const float AvoidWeight = 2.8f;
+        private const float AvoidTurnWeight = 1.15f;
+        private const float VelocityLookAhead = 0.5f;
+        private const float RedirectOutwardWeight = 0.65f;
 
         [SerializeField] private float damagePerSecond = 90f;
+        [SerializeField] private Vector2 avoidanceFootprint;
         private readonly Dictionary<Health, float> nextDamageTime = new();
         private static readonly List<Hazard> Active = new();
         private Collider zone;
@@ -25,37 +33,371 @@ namespace PolarityProtocol.Combat
             Active.Remove(this);
         }
 
-        /// <summary>
-        /// Bends a desired move direction away from any hazard the position is
-        /// standing near. Callers skip this while a magnet is dragging the mover,
-        /// which is what makes pushing enemies into plasma still work.
-        /// </summary>
-        public static Vector3 SteerAway(Vector3 position, Vector3 desiredMove)
+        public void ConfigureAvoidanceFootprint(Vector2 footprint)
         {
-            Vector3 escape = Vector3.zero;
+            avoidanceFootprint = new Vector2(
+                Mathf.Max(0f, footprint.x),
+                Mathf.Max(0f, footprint.y));
+        }
+
+        private Bounds AvoidanceBounds
+        {
+            get
+            {
+                Bounds bounds = zone.bounds;
+                if (avoidanceFootprint.x <= 0f || avoidanceFootprint.y <= 0f)
+                {
+                    return bounds;
+                }
+
+                Vector3 right = transform.TransformVector(Vector3.right * avoidanceFootprint.x);
+                Vector3 forward = transform.TransformVector(Vector3.forward * avoidanceFootprint.y);
+                Vector3 size = bounds.size;
+                size.x = Mathf.Abs(right.x) + Mathf.Abs(forward.x);
+                size.z = Mathf.Abs(right.z) + Mathf.Abs(forward.z);
+                bounds.size = size;
+                return bounds;
+            }
+        }
+
+        /// <summary>
+        /// Routes a desired move direction around each plasma trigger. The bounds
+        /// are expanded by the enemy collider radius, so avoiding with the robot's
+        /// centre also keeps its body out of the damaging area.
+        /// </summary>
+        public static Vector3 SteerAway(Vector3 position, Vector3 desiredMove, float turnBias = 1f)
+        {
+            Vector3 steeredMove = Vector3.ProjectOnPlane(desiredMove, Vector3.up);
 
             for (int i = 0; i < Active.Count; i++)
             {
-                Bounds bounds = Active[i].zone.bounds;
-                Vector3 away = new(position.x - bounds.center.x, 0f, position.z - bounds.center.z);
-                float radius = new Vector2(bounds.extents.x, bounds.extents.z).magnitude + AvoidMargin;
-                float distance = away.magnitude;
-
-                if (distance > radius)
+                Collider activeZone = Active[i].zone;
+                if (activeZone == null || !activeZone.enabled)
                 {
                     continue;
                 }
 
-                Vector3 direction = distance > 0.01f ? away / distance : Vector3.forward;
-                escape += direction * (1f - distance / radius);
+                steeredMove = SteerAwayFromBounds(
+                    position,
+                    steeredMove,
+                    Active[i].AvoidanceBounds,
+                    turnBias);
             }
 
-            if (escape.sqrMagnitude < 0.0001f)
+            return Vector3.ClampMagnitude(steeredMove, 1f);
+        }
+
+        /// <summary>
+        /// Redirects autonomous Rigidbody momentum that would cross an expanded
+        /// plasma bound. EnemyBrain skips this while magnetic force has control.
+        /// </summary>
+        public static Vector3 RedirectVelocity(
+            Vector3 position,
+            Vector3 planarVelocity,
+            float turnBias = 1f)
+        {
+            Vector3 safeVelocity = Vector3.ProjectOnPlane(planarVelocity, Vector3.up);
+
+            for (int i = 0; i < Active.Count; i++)
+            {
+                Collider activeZone = Active[i].zone;
+                if (activeZone == null || !activeZone.enabled)
+                {
+                    continue;
+                }
+
+                safeVelocity = RedirectVelocityFromBounds(
+                    position,
+                    safeVelocity,
+                    Active[i].AvoidanceBounds,
+                    turnBias);
+            }
+
+            return safeVelocity;
+        }
+
+        /// <summary>
+        /// Moves an authored spawn out of a plasma clearance area. This protects
+        /// runtime-generated stress units and hand-authored encounters from taking
+        /// hazard damage before their first AI step.
+        /// </summary>
+        public static Vector3 ResolveSafeSpawn(Vector3 position)
+        {
+            return ResolveSafePosition(position);
+        }
+
+        public static Vector3 ResolveSafePosition(Vector3 position)
+        {
+            const float safetyGap = 0.05f;
+
+            for (int i = 0; i < Active.Count; i++)
+            {
+                Collider activeZone = Active[i].zone;
+                if (activeZone == null || !activeZone.enabled)
+                {
+                    continue;
+                }
+
+                position = ResolveSafeSpawn(position, Active[i].AvoidanceBounds, safetyGap);
+            }
+
+            return position;
+        }
+
+        public static Vector3 ResolveSafeSpawn(
+            Vector3 position,
+            Bounds bounds,
+            float spawnGap = 0.05f)
+        {
+            float minX = bounds.min.x - EnemyClearance;
+            float maxX = bounds.max.x + EnemyClearance;
+            float minZ = bounds.min.z - EnemyClearance;
+            float maxZ = bounds.max.z + EnemyClearance;
+            if (position.x < minX || position.x > maxX ||
+                position.z < minZ || position.z > maxZ)
+            {
+                return position;
+            }
+
+            Vector3 exit = NearestExitDirection(position, minX, maxX, minZ, maxZ);
+            if (exit == Vector3.left)
+            {
+                position.x = minX - spawnGap;
+            }
+            else if (exit == Vector3.right)
+            {
+                position.x = maxX + spawnGap;
+            }
+            else if (exit == Vector3.back)
+            {
+                position.z = minZ - spawnGap;
+            }
+            else
+            {
+                position.z = maxZ + spawnGap;
+            }
+
+            return position;
+        }
+
+        public static Vector3 SteerAwayFromBounds(
+            Vector3 position,
+            Vector3 desiredMove,
+            Bounds bounds,
+            float turnBias = 1f)
+        {
+            float minX = bounds.min.x - EnemyClearance;
+            float maxX = bounds.max.x + EnemyClearance;
+            float minZ = bounds.min.z - EnemyClearance;
+            float maxZ = bounds.max.z + EnemyClearance;
+
+            bool insideX = position.x >= minX && position.x <= maxX;
+            bool insideZ = position.z >= minZ && position.z <= maxZ;
+            if (insideX && insideZ)
+            {
+                // A collision or a recently released magnet may leave an enemy in
+                // the clearance area. Take the shortest route back to safe ground.
+                return NearestExitDirection(position, minX, maxX, minZ, maxZ);
+            }
+
+            Vector3 closest = new(
+                Mathf.Clamp(position.x, minX, maxX),
+                position.y,
+                Mathf.Clamp(position.z, minZ, maxZ));
+            Vector3 away = position - closest;
+            away.y = 0f;
+            float distance = away.magnitude;
+            if (distance >= AvoidDistance || distance < 0.0001f)
             {
                 return desiredMove;
             }
 
-            return Vector3.ClampMagnitude(desiredMove + escape * AvoidWeight, 1f);
+            Vector3 normal = away / distance;
+            float inwardSpeed = -Vector3.Dot(desiredMove, normal);
+            if (inwardSpeed <= 0f)
+            {
+                return desiredMove;
+            }
+
+            float proximity = 1f - distance / AvoidDistance;
+            Vector3 tangent = ChooseTangent(normal, position, bounds.center, turnBias);
+
+            // The normal keeps the capsule clear; the tangent prevents a robot
+            // approaching head-on from stopping at the edge instead of routing on.
+            return desiredMove +
+                   normal * (proximity * AvoidWeight) +
+                   tangent * (proximity * AvoidTurnWeight);
+        }
+
+        public static Vector3 RedirectVelocityFromBounds(
+            Vector3 position,
+            Vector3 planarVelocity,
+            Bounds bounds,
+            float turnBias = 1f)
+        {
+            float speed = planarVelocity.magnitude;
+            if (speed < 0.0001f)
+            {
+                return planarVelocity;
+            }
+
+            float minX = bounds.min.x - EnemyClearance;
+            float maxX = bounds.max.x + EnemyClearance;
+            float minZ = bounds.min.z - EnemyClearance;
+            float maxZ = bounds.max.z + EnemyClearance;
+            bool inside = position.x >= minX && position.x <= maxX &&
+                          position.z >= minZ && position.z <= maxZ;
+
+            Vector3 normal;
+            if (inside)
+            {
+                normal = NearestExitDirection(position, minX, maxX, minZ, maxZ);
+                if (Vector3.Dot(planarVelocity, normal) > 0f)
+                {
+                    return planarVelocity;
+                }
+            }
+            else if (!TryGetEntryNormal(
+                         position,
+                         planarVelocity * VelocityLookAhead,
+                         minX,
+                         maxX,
+                         minZ,
+                         maxZ,
+                         out normal))
+            {
+                return planarVelocity;
+            }
+
+            Vector3 tangent = ChooseTangent(normal, position, bounds.center, turnBias);
+            Vector3 redirected = (normal * RedirectOutwardWeight + tangent).normalized;
+            return redirected * speed;
+        }
+
+        private static Vector3 ChooseTangent(
+            Vector3 normal,
+            Vector3 position,
+            Vector3 boundsCenter,
+            float turnBias)
+        {
+            Vector3 tangent = new(-normal.z, 0f, normal.x);
+            float side = Vector3.Dot(position - boundsCenter, tangent);
+            if (Mathf.Abs(side) < 0.05f)
+            {
+                side = turnBias;
+            }
+            if (side < 0f)
+            {
+                tangent = -tangent;
+            }
+
+            return tangent;
+        }
+
+        private static bool TryGetEntryNormal(
+            Vector3 position,
+            Vector3 travel,
+            float minX,
+            float maxX,
+            float minZ,
+            float maxZ,
+            out Vector3 entryNormal)
+        {
+            float enter = 0f;
+            float exit = 1f;
+            entryNormal = Vector3.zero;
+
+            if (!UpdateSegmentInterval(
+                    position.x,
+                    travel.x,
+                    minX,
+                    maxX,
+                    Vector3.left,
+                    Vector3.right,
+                    ref enter,
+                    ref exit,
+                    ref entryNormal) ||
+                !UpdateSegmentInterval(
+                    position.z,
+                    travel.z,
+                    minZ,
+                    maxZ,
+                    Vector3.back,
+                    Vector3.forward,
+                    ref enter,
+                    ref exit,
+                    ref entryNormal))
+            {
+                return false;
+            }
+
+            return entryNormal != Vector3.zero && enter <= 1f && exit >= 0f;
+        }
+
+        private static bool UpdateSegmentInterval(
+            float origin,
+            float travel,
+            float minimum,
+            float maximum,
+            Vector3 minimumNormal,
+            Vector3 maximumNormal,
+            ref float enter,
+            ref float exit,
+            ref Vector3 entryNormal)
+        {
+            if (Mathf.Abs(travel) < 0.0001f)
+            {
+                return origin >= minimum && origin <= maximum;
+            }
+
+            float near = (minimum - origin) / travel;
+            float far = (maximum - origin) / travel;
+            Vector3 nearNormal = minimumNormal;
+            if (near > far)
+            {
+                (near, far) = (far, near);
+                nearNormal = maximumNormal;
+            }
+
+            if (near > enter)
+            {
+                enter = near;
+                entryNormal = nearNormal;
+            }
+            exit = Mathf.Min(exit, far);
+            return enter <= exit;
+        }
+
+        private static Vector3 NearestExitDirection(
+            Vector3 position,
+            float minX,
+            float maxX,
+            float minZ,
+            float maxZ)
+        {
+            float nearest = position.x - minX;
+            Vector3 direction = Vector3.left;
+
+            float distance = maxX - position.x;
+            if (distance < nearest)
+            {
+                nearest = distance;
+                direction = Vector3.right;
+            }
+
+            distance = position.z - minZ;
+            if (distance < nearest)
+            {
+                nearest = distance;
+                direction = Vector3.back;
+            }
+
+            if (maxZ - position.z < nearest)
+            {
+                direction = Vector3.forward;
+            }
+
+            return direction;
         }
 
         private void OnTriggerStay(Collider other)
@@ -63,6 +405,13 @@ namespace PolarityProtocol.Combat
             Health health = other.GetComponentInParent<Health>();
             if (health == null || health.IsDead)
             {
+                return;
+            }
+
+            IHazardDamageGate damageGate = health.GetComponent<IHazardDamageGate>();
+            if (damageGate != null && !damageGate.CanTakeHazardDamage)
+            {
+                nextDamageTime.Remove(health);
                 return;
             }
 

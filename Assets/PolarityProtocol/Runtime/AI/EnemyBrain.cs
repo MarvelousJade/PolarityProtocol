@@ -22,7 +22,7 @@ namespace PolarityProtocol.AI
     }
 
     [RequireComponent(typeof(Rigidbody), typeof(Health))]
-    public sealed class EnemyBrain : MonoBehaviour, IDamageModifier
+    public sealed class EnemyBrain : MonoBehaviour, IDamageModifier, IHazardDamageGate
     {
         private EnemyDefinition definition;
         private Transform target;
@@ -45,6 +45,8 @@ namespace PolarityProtocol.AI
         private float stateEndsAt;
         private float shieldExposedUntil;
         private float magnetHeldUntil;
+        private float hazardVulnerableUntil;
+        private float hazardTurnBias;
         private float flashEndsAt;
         private Vector3 desiredMove;
         private bool configured;
@@ -56,6 +58,7 @@ namespace PolarityProtocol.AI
         public EnemyDefinition Definition => definition;
         public Health Health => health;
         public MagneticPolarity PlatePolarity => platePolarity;
+        public bool CanTakeHazardDamage => Time.time < hazardVulnerableUntil;
         public bool ShieldExposed => definition != null &&
                                      definition.Archetype == EnemyArchetype.Shield &&
                                      (plateTornOff || Time.time < shieldExposedUntil);
@@ -130,18 +133,40 @@ namespace PolarityProtocol.AI
                 return;
             }
 
-            // Enemies route around plasma on their own, but a magnet dragging them
-            // overrides that -- otherwise they could never be pushed into a hazard.
-            Vector3 steer = Time.time < magnetHeldUntil
-                ? desiredMove
-                : Hazard.SteerAway(transform.position, desiredMove);
-
             Vector3 planarVelocity = Vector3.ProjectOnPlane(body.linearVelocity, Vector3.up);
-            Vector3 desiredVelocity = steer * definition.MovementSpeed;
-            Vector3 velocityDelta = Vector3.ClampMagnitude(
-                desiredVelocity - planarVelocity,
-                definition.Acceleration * Time.fixedDeltaTime);
-            body.AddForce(velocityDelta, ForceMode.VelocityChange);
+            bool magneticallyDisplaced = Time.time < magnetHeldUntil;
+
+            // Normal locomotion routes around the expanded plasma bounds. While a
+            // magnet has hold of the unit, suspend the motor instead of letting its
+            // own pursuit movement carry it into the hazard; only field force and
+            // existing momentum can move it there.
+            if (!magneticallyDisplaced)
+            {
+                Vector3 navigationPosition = Hazard.ResolveSafePosition(transform.position);
+                if ((navigationPosition - transform.position).sqrMagnitude > 0.0001f)
+                {
+                    body.position = navigationPosition;
+                }
+
+                Vector3 steer = Hazard.SteerAway(
+                    navigationPosition,
+                    desiredMove,
+                    hazardTurnBias);
+                Vector3 desiredVelocity = steer * definition.MovementSpeed;
+                Vector3 velocityDelta = Vector3.ClampMagnitude(
+                    desiredVelocity - planarVelocity,
+                    definition.Acceleration * Time.fixedDeltaTime);
+                Vector3 motorPlanarVelocity = planarVelocity + velocityDelta;
+                Vector3 safePlanarVelocity = Hazard.RedirectVelocity(
+                    navigationPosition,
+                    motorPlanarVelocity,
+                    hazardTurnBias);
+                body.linearVelocity = new Vector3(
+                    safePlanarVelocity.x,
+                    body.linearVelocity.y,
+                    safePlanarVelocity.z);
+                planarVelocity = safePlanarVelocity;
+            }
 
             if (planarVelocity.magnitude > definition.MovementSpeed * 1.6f)
             {
@@ -201,6 +226,7 @@ namespace PolarityProtocol.AI
             health.Damaged += OnDamaged;
             health.Died += OnDied;
             nextAttackTime = Time.time + 0.8f;
+            hazardTurnBias = (GetEntityId().GetHashCode() & 1) == 0 ? 1f : -1f;
             configured = true;
             SetState(EnemyState.Acquiring);
         }
@@ -211,6 +237,11 @@ namespace PolarityProtocol.AI
             {
                 return;
             }
+
+            // Plasma is an environmental execution tool, not something enemies
+            // should kill themselves on. A meaningful field hit opens a long enough
+            // window for a robot dragged into plasma to take lethal damage.
+            hazardVulnerableUntil = Mathf.Max(hazardVulnerableUntil, Time.time + 1.25f);
 
             if (definition.Archetype == EnemyArchetype.Shield)
             {
@@ -226,7 +257,7 @@ namespace PolarityProtocol.AI
             }
             else
             {
-                magnetHeldUntil = Time.time + 0.35f;
+                magnetHeldUntil = Time.time + 0.8f;
             }
 
             if (State != EnemyState.Dead && State != EnemyState.Telegraphing)

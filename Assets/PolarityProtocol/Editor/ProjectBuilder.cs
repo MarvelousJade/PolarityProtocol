@@ -182,7 +182,7 @@ namespace PolarityProtocol.Editor
                 new[]
                 {
                     new EncounterDefinition.Spawn(EnemyArchetype.Shooter, new Vector3(-12f, 1f, 9f)),
-                    new EncounterDefinition.Spawn(EnemyArchetype.Shooter, new Vector3(12f, 1f, 7f)),
+                    new EncounterDefinition.Spawn(EnemyArchetype.Shooter, new Vector3(14f, 1f, 4f)),
                     new EncounterDefinition.Spawn(EnemyArchetype.Chaser, new Vector3(1f, 1f, 8f))
                 });
 
@@ -193,7 +193,7 @@ namespace PolarityProtocol.Editor
                 new[]
                 {
                     new EncounterDefinition.Spawn(EnemyArchetype.Shield, new Vector3(0f, 1f, 10f)),
-                    new EncounterDefinition.Spawn(EnemyArchetype.Shooter, new Vector3(-13f, 1f, 5f)),
+                    new EncounterDefinition.Spawn(EnemyArchetype.Shooter, new Vector3(-14f, 1f, 7f)),
                     new EncounterDefinition.Spawn(EnemyArchetype.Shooter, new Vector3(13f, 1f, 4f)),
                     new EncounterDefinition.Spawn(EnemyArchetype.Chaser, new Vector3(-5f, 1f, 7f)),
                     new EncounterDefinition.Spawn(EnemyArchetype.Chaser, new Vector3(6f, 1f, 10f))

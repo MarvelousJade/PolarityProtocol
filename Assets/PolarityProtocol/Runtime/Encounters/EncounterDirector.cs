@@ -120,7 +120,7 @@ namespace PolarityProtocol.Encounters
         public static EnemyBrain Create(EnemyDefinition definition, Transform player, Vector3 position)
         {
             GameObject root = new($"{definition.Archetype} Unit");
-            root.transform.position = position;
+            root.transform.position = Hazard.ResolveSafeSpawn(position);
 
             CapsuleCollider collider = root.AddComponent<CapsuleCollider>();
             collider.height = 2.2f;

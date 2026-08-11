@@ -474,8 +474,9 @@ namespace PolarityProtocol.Arena
             BoxCollider trigger = hazardRoot.AddComponent<BoxCollider>();
             trigger.isTrigger = true;
             trigger.center = new Vector3(0f, 0.75f, 0f);
-            trigger.size = new Vector3(scale.x, 1.7f, scale.z);
-            hazardRoot.AddComponent<Hazard>();
+            trigger.size = new Vector3(scale.x * 0.86f, 1.7f, scale.z * 0.86f);
+            Hazard hazard = hazardRoot.AddComponent<Hazard>();
+            hazard.ConfigureAvoidanceFootprint(new Vector2(scale.x, scale.z));
 
             for (int i = -2; i <= 2; i++)
             {
@@ -593,7 +594,7 @@ namespace PolarityProtocol.Arena
                 new[]
                 {
                     new EncounterDefinition.Spawn(EnemyArchetype.Shooter, new Vector3(-12f, 1f, 9f)),
-                    new EncounterDefinition.Spawn(EnemyArchetype.Shooter, new Vector3(12f, 1f, 7f)),
+                    new EncounterDefinition.Spawn(EnemyArchetype.Shooter, new Vector3(14f, 1f, 4f)),
                     new EncounterDefinition.Spawn(EnemyArchetype.Chaser, new Vector3(1f, 1f, 8f))
                 });
 
@@ -604,7 +605,7 @@ namespace PolarityProtocol.Arena
                 new[]
                 {
                     new EncounterDefinition.Spawn(EnemyArchetype.Shield, new Vector3(0f, 1f, 10f)),
-                    new EncounterDefinition.Spawn(EnemyArchetype.Shooter, new Vector3(-13f, 1f, 5f)),
+                    new EncounterDefinition.Spawn(EnemyArchetype.Shooter, new Vector3(-14f, 1f, 7f)),
                     new EncounterDefinition.Spawn(EnemyArchetype.Shooter, new Vector3(13f, 1f, 4f)),
                     new EncounterDefinition.Spawn(EnemyArchetype.Chaser, new Vector3(-5f, 1f, 7f)),
                     new EncounterDefinition.Spawn(EnemyArchetype.Chaser, new Vector3(6f, 1f, 10f))

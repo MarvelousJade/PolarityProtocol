@@ -48,5 +48,10 @@ namespace PolarityProtocol.Combat
     {
         DamageInfo ModifyDamage(DamageInfo damage);
     }
+
+    public interface IHazardDamageGate
+    {
+        bool CanTakeHazardDamage { get; }
+    }
 }
 

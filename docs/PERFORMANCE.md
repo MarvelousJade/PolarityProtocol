@@ -3,7 +3,7 @@
 ## Test environment
 
 - Baseline/optimization date: 2026-07-23
-- UI Toolkit migration validation: 2026-08-11
+- UI Toolkit and visual-footprint AI feature validation: 2026-08-11
 - Unity: `6000.4.11f1`
 - Build: Windows x64, Mono, Development Build
 - Resolution: 1280×720
@@ -37,19 +37,19 @@ Run it with:
 
 ## Results
 
-| Measurement | Before optimization | After optimization | UI Toolkit migration |
-|---|---:|---:|---:|
-| Peak enemies | 21 | 21 | 21 |
-| Peak projectiles | 120 | 120 | 120 |
-| Average frame | 8.45 ms | 8.53 ms | 9.38 ms |
-| Average FPS | 118.3 | 117.2 | 106.7 |
-| Sampled main thread | 8.32 ms | 8.75 ms | 8.32 ms |
-| Worst observed frame | 203.96 ms | 249.00 ms | 1599.70 ms |
-| Gen-0 collections | 17 | 4 | 2 |
-| Last-frame GC allocation | 0.16 KB | 0.20 KB | 0.43 KB |
-| Sampled used memory | 142.9 MB | 143.2 MB | 151.0 MB |
+| Measurement | Before optimization | After optimization | UI Toolkit feature run | Visual-footprint AI feature run |
+|---|---:|---:|---:|---:|
+| Peak enemies | 21 | 21 | 21 | 21 |
+| Peak projectiles | 120 | 120 | 120 | 120 |
+| Average frame | 8.45 ms | 8.53 ms | 9.38 ms | 8.88 ms |
+| Average FPS | 118.3 | 117.2 | 106.7 | 112.6 |
+| Sampled main thread | 8.32 ms | 8.75 ms | 8.32 ms | 8.32 ms |
+| Worst observed frame | 203.96 ms | 249.00 ms | 1599.70 ms | 899.98 ms |
+| Gen-0 collections | 17 | 4 | 2 | 3 |
+| Last-frame GC allocation | 0.16 KB | 0.20 KB | 0.43 KB | 0.20 KB |
+| Sampled used memory | 142.9 MB | 143.2 MB | 151.0 MB | 146.0 MB |
 
-The latest packaged-player run validates the UI Toolkit migration under the same 21-enemy/120-projectile workload. Sampled main-thread time remained at **8.32 ms**, while the one-run average was **9.38 ms** and memory was **151.0 MB**. Gen-0 collections are now **17 → 2** versus the original baseline. The 1.6-second worst frame occurred during workload/UI warm-up and is retained rather than filtered out.
+The two 2026-08-11 measurements were run on their originating feature branches before merge, isolating the UI Toolkit migration and visual-footprint hazard steering respectively. Both retained an **8.32 ms** sampled main-thread time under the same 21-enemy/120-projectile workload. Their worst frames occurred during startup and warm-up and are retained rather than filtered out. Gen-0 collections remain substantially below the original baseline at **2–3** versus **17**. A combined post-merge run should be used for future regression comparisons.
 
 ## Optimization
 
@@ -64,7 +64,7 @@ The optimized implementation:
 5. replaces benchmark enemy enumeration with `EnemyBrain.ActiveCount`; and
 6. keeps one UI Toolkit document alive, caches queried elements, and refreshes changing text at 10 Hz.
 
-Projectile materials and placement-preview materials were also converted from repeated construction to cached material updates before the second measurement. The third measurement uses the migrated UXML/USS interface and the isolated F3 IMGUI diagnostics overlay.
+Projectile materials and placement-preview materials were also converted from repeated construction to cached material updates before the second measurement. The third measurement uses the migrated UXML/USS interface and isolated F3 IMGUI diagnostics overlay. The fourth includes full-visual-footprint hazard steering, Rigidbody velocity look-ahead, autonomous position correction, and magnetic hazard-damage gating.
 
 ## Existing safeguards
 
@@ -80,7 +80,7 @@ Projectile materials and placement-preview materials were also converted from re
 
 - This is a short development-build benchmark, not a shipping hardware certification.
 - Worst-frame values include workload creation, UI/style initialization, and shader/runtime warm-up; average and collection count are more representative of sustained behavior.
-- The three columns are individual runs on the same machine, not statistical aggregates; use them as regression evidence rather than a hardware certification.
+- The columns are individual runs on the same machine, not statistical aggregates; use them as regression evidence rather than a hardware certification.
 - The Unity `Draw Calls Count` recorder returned no value in this packaged batch configuration. It is therefore reported as unavailable, not as zero draw calls.
 - Player input is not simulated during the benchmark, but the full AI, projectile, collision, magnetic-target, audio, rendering, and encounter loops remain active.
 - A release build should be profiled separately before distribution because development instrumentation changes timing and size.

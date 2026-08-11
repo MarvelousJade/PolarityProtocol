@@ -1,8 +1,10 @@
 using System.Collections;
 using NUnit.Framework;
 using PolarityProtocol.AI;
+using PolarityProtocol.Arena;
 using PolarityProtocol.Combat;
 using PolarityProtocol.Data;
+using PolarityProtocol.Encounters;
 using PolarityProtocol.Magnetics;
 using PolarityProtocol.Player;
 using UnityEngine;
@@ -185,6 +187,140 @@ namespace PolarityProtocol.Tests
             Assert.That(brain.ShieldExposed, Is.True);
 
             Object.Destroy(plate);
+            Object.Destroy(unit);
+            Object.Destroy(definition);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator Hazard_AvoidanceUsesVisualFootprintBeyondDamageTrigger()
+        {
+            GameObject hazardObject = new("Test Plasma Footprint");
+            BoxCollider trigger = hazardObject.AddComponent<BoxCollider>();
+            trigger.isTrigger = true;
+            trigger.size = new Vector3(3.44f, 2f, 3.44f);
+            Hazard hazard = hazardObject.AddComponent<Hazard>();
+            hazard.ConfigureAvoidanceFootprint(new Vector2(4f, 4f));
+
+            Physics.SyncTransforms();
+            yield return null;
+
+            Vector3 safePosition = Hazard.ResolveSafePosition(new Vector3(-3.2f, 0f, 0f));
+
+            Assert.That(safePosition.x, Is.LessThan(-3.35f));
+            Assert.That(trigger.bounds.min.x, Is.EqualTo(-1.72f).Within(0.01f));
+
+            Object.Destroy(hazardObject);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator ShooterMotor_CorrectsPositionOutsideVisualHazardFootprint()
+        {
+            GameObject hazardObject = new("Test Plasma Footprint");
+            BoxCollider trigger = hazardObject.AddComponent<BoxCollider>();
+            trigger.isTrigger = true;
+            trigger.center = new Vector3(0f, 1f, 0f);
+            trigger.size = new Vector3(3.44f, 2f, 3.44f);
+            Hazard hazard = hazardObject.AddComponent<Hazard>();
+            hazard.ConfigureAvoidanceFootprint(new Vector2(4f, 4f));
+
+            GameObject player = new("Player Target");
+            Health playerHealth = player.AddComponent<Health>();
+            playerHealth.Configure(100f, CombatFaction.Player);
+            player.transform.position = new Vector3(6f, 0f, 0f);
+
+            GameObject systems = new("Test Runtime Systems");
+            EncounterDirector director = systems.AddComponent<EncounterDirector>();
+            director.Configure(
+                new EncounterDefinition[0],
+                new EnemyDefinition[0],
+                player.transform);
+            GameSession session = systems.AddComponent<GameSession>();
+            session.Configure(playerHealth, director);
+            session.BeginRun();
+
+            GameObject unit = new("Shooter Unit");
+            unit.transform.position = new Vector3(-2.5f, 0f, 0f);
+            unit.AddComponent<CapsuleCollider>();
+            Rigidbody body = unit.AddComponent<Rigidbody>();
+            body.useGravity = false;
+            unit.AddComponent<Health>();
+            EnemyBrain brain = unit.AddComponent<EnemyBrain>();
+            EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
+            definition.Configure(EnemyArchetype.Shooter, 48f, 4.6f, 18f, 14f, 2.2f, Color.magenta);
+            brain.Configure(
+                definition,
+                player.transform,
+                new Renderer[0],
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
+
+            Physics.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(body.position.x, Is.LessThan(-3.35f));
+
+            Object.Destroy(hazardObject);
+            Object.Destroy(unit);
+            Object.Destroy(player);
+            Object.Destroy(systems);
+            Object.Destroy(definition);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator Enemy_HazardDamageRequiresRecentMagneticForce()
+        {
+            GameObject hazardObject = new("Test Plasma");
+            BoxCollider trigger = hazardObject.AddComponent<BoxCollider>();
+            trigger.isTrigger = true;
+            trigger.size = new Vector3(4f, 2f, 4f);
+            hazardObject.AddComponent<Hazard>();
+
+            GameObject unit = new("Chaser Unit");
+            CapsuleCollider unitCollider = unit.AddComponent<CapsuleCollider>();
+            unitCollider.height = 2.2f;
+            unitCollider.radius = 0.55f;
+            Rigidbody body = unit.AddComponent<Rigidbody>();
+            body.isKinematic = true;
+            Health health = unit.AddComponent<Health>();
+            EnemyBrain brain = unit.AddComponent<EnemyBrain>();
+
+            EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
+            definition.Configure(EnemyArchetype.Chaser, 65f, 6.2f, 2.3f, 18f, 1.7f, Color.red);
+            brain.Configure(
+                definition,
+                null,
+                new Renderer[0],
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
+
+            Physics.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(health.Current, Is.EqualTo(health.Maximum));
+
+            brain.NotifyMagneticForce(40f, MagneticPolarity.Negative);
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(health.Current, Is.LessThan(health.Maximum));
+
+            Object.Destroy(hazardObject);
             Object.Destroy(unit);
             Object.Destroy(definition);
             yield return null;

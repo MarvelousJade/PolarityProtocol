@@ -58,7 +58,7 @@ All demo targets have positive polarity, making negative anchors pull and positi
 - Shooter: approach/retreat/strafe → telegraph → fire → recover
 - Shield: chaser behavior plus a frontal damage modifier and magnetic exposure window
 
-Local hazard steering expands each plasma trigger by the enemy collider clearance, routes inward movement around the nearest edge, and corrects unsafe authored spawn positions. During magnetic displacement the AI motor yields, so field force—not pursuit locomotion—is what can carry a movable enemy into plasma.
+Local hazard steering expands each plasma trigger by the enemy collider clearance, routes inward movement around the nearest edge, redirects unsafe Rigidbody momentum, and corrects unsafe authored spawn positions. During magnetic displacement the AI motor yields, so field force—not pursuit locomotion—is what can carry a movable enemy into plasma. Enemy hazard damage is gated by a short recent-field window; players and other ungated health targets still take environmental damage normally.
 
 Magnetic force never directly edits AI state internals; `MagneticTarget` reports displacement through `NotifyMagneticForce`.
 

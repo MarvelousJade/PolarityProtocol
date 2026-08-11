@@ -22,7 +22,7 @@ namespace PolarityProtocol.AI
     }
 
     [RequireComponent(typeof(Rigidbody), typeof(Health))]
-    public sealed class EnemyBrain : MonoBehaviour, IDamageModifier
+    public sealed class EnemyBrain : MonoBehaviour, IDamageModifier, IHazardDamageGate
     {
         private EnemyDefinition definition;
         private Transform target;
@@ -45,6 +45,7 @@ namespace PolarityProtocol.AI
         private float stateEndsAt;
         private float shieldExposedUntil;
         private float magnetHeldUntil;
+        private float hazardVulnerableUntil;
         private float hazardTurnBias;
         private float flashEndsAt;
         private Vector3 desiredMove;
@@ -57,6 +58,7 @@ namespace PolarityProtocol.AI
         public EnemyDefinition Definition => definition;
         public Health Health => health;
         public MagneticPolarity PlatePolarity => platePolarity;
+        public bool CanTakeHazardDamage => Time.time < hazardVulnerableUntil;
         public bool ShieldExposed => definition != null &&
                                      definition.Archetype == EnemyArchetype.Shield &&
                                      (plateTornOff || Time.time < shieldExposedUntil);
@@ -148,7 +150,16 @@ namespace PolarityProtocol.AI
                 Vector3 velocityDelta = Vector3.ClampMagnitude(
                     desiredVelocity - planarVelocity,
                     definition.Acceleration * Time.fixedDeltaTime);
-                body.AddForce(velocityDelta, ForceMode.VelocityChange);
+                Vector3 motorPlanarVelocity = planarVelocity + velocityDelta;
+                Vector3 safePlanarVelocity = Hazard.RedirectVelocity(
+                    transform.position,
+                    motorPlanarVelocity,
+                    hazardTurnBias);
+                body.linearVelocity = new Vector3(
+                    safePlanarVelocity.x,
+                    body.linearVelocity.y,
+                    safePlanarVelocity.z);
+                planarVelocity = safePlanarVelocity;
             }
 
             if (planarVelocity.magnitude > definition.MovementSpeed * 1.6f)
@@ -220,6 +231,11 @@ namespace PolarityProtocol.AI
             {
                 return;
             }
+
+            // Plasma is an environmental execution tool, not something enemies
+            // should kill themselves on. A meaningful field hit opens a long enough
+            // window for a robot dragged into plasma to take lethal damage.
+            hazardVulnerableUntil = Mathf.Max(hazardVulnerableUntil, Time.time + 1.25f);
 
             if (definition.Archetype == EnemyArchetype.Shield)
             {

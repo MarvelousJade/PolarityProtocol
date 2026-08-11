@@ -44,7 +44,7 @@ The demo has an intro screen, tutorial objectives, pause/restart flow, failure r
 - Runtime force vectors, AI states, targeting ranges, active counts, and frame-rate diagnostics
 - Encounter authoring window with draggable spawn handles, range preview, and bounds/separation validation
 - Dedicated stress scene and packaged-player benchmark mode
-- Six Edit Mode tests and three Play Mode tests
+- Twelve Edit Mode tests and seven Play Mode tests
 
 ## Project layout
 
@@ -120,8 +120,8 @@ Run the suites from Unity Test Runner, or use:
 
 Verified locally:
 
-- Edit Mode: **6/6 passed**
-- Play Mode: **3/3 passed**
+- Edit Mode: **12/12 passed**
+- Play Mode: **7/7 passed**
 - Windows x64 development player: **build succeeded**
 - Packaged-player smoke run: **no runtime exceptions**
 
@@ -131,9 +131,9 @@ The reproducible stress workload adds 18 robots and 120 projectiles to the openi
 
 - 21 peak enemies
 - 120 peak projectiles
-- 117.2 average FPS / 8.53 ms average frame
-- 8.75 ms sampled main-thread time
-- 143.2 MB sampled used memory
+- 118.1 average FPS / 8.47 ms average frame
+- 8.31 ms sampled main-thread time
+- 146.0 MB sampled used memory
 - Gen-0 collections reduced from 17 to 4 after pooling synthesized feedback clips and removing diagnostic array queries
 
 Full methodology and caveats are in [Performance](docs/PERFORMANCE.md).
@@ -143,7 +143,7 @@ Full methodology and caveats are in [Performance](docs/PERFORMANCE.md).
 - Presentation is intentionally procedural: primitive models, generated materials, simple robot motion, and synthesized tones.
 - Enemy navigation uses local steering and arena collision rather than a baked NavMesh.
 - The legacy input map targets Xbox-style Windows controllers; unusual controller layouts may need axis remapping.
-- The development build prioritizes inspection over distribution size and is approximately 140.8 MiB.
+- The development build prioritizes inspection over distribution size and is approximately 140.9 MiB.
 - No gameplay video or GIF is checked in yet.
 - The batch benchmark could not retrieve the draw-call counter on this Unity/player configuration; the report marks it unavailable rather than presenting zero as a real count.
 

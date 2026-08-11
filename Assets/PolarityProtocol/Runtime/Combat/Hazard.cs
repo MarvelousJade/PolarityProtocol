@@ -9,10 +9,12 @@ namespace PolarityProtocol.Combat
         // The enemy capsule has a 0.55 m radius. Keeping its centre this far
         // outside the trigger prevents an apparently safe robot from overlapping
         // the plasma with the edge of its collider.
-        private const float EnemyClearance = 0.8f;
+        private const float EnemyClearance = 1.1f;
         private const float AvoidDistance = 2.5f;
         private const float AvoidWeight = 2.8f;
         private const float AvoidTurnWeight = 1.15f;
+        private const float VelocityLookAhead = 0.35f;
+        private const float RedirectOutwardWeight = 0.65f;
 
         [SerializeField] private float damagePerSecond = 90f;
         private readonly Dictionary<Health, float> nextDamageTime = new();
@@ -55,6 +57,35 @@ namespace PolarityProtocol.Combat
             }
 
             return Vector3.ClampMagnitude(steeredMove, 1f);
+        }
+
+        /// <summary>
+        /// Redirects autonomous Rigidbody momentum that would cross an expanded
+        /// plasma bound. EnemyBrain skips this while magnetic force has control.
+        /// </summary>
+        public static Vector3 RedirectVelocity(
+            Vector3 position,
+            Vector3 planarVelocity,
+            float turnBias = 1f)
+        {
+            Vector3 safeVelocity = Vector3.ProjectOnPlane(planarVelocity, Vector3.up);
+
+            for (int i = 0; i < Active.Count; i++)
+            {
+                Collider activeZone = Active[i].zone;
+                if (activeZone == null || !activeZone.enabled)
+                {
+                    continue;
+                }
+
+                safeVelocity = RedirectVelocityFromBounds(
+                    position,
+                    safeVelocity,
+                    activeZone.bounds,
+                    turnBias);
+            }
+
+            return safeVelocity;
         }
 
         /// <summary>
@@ -156,9 +187,68 @@ namespace PolarityProtocol.Combat
             }
 
             float proximity = 1f - distance / AvoidDistance;
+            Vector3 tangent = ChooseTangent(normal, position, bounds.center, turnBias);
+
+            // The normal keeps the capsule clear; the tangent prevents a robot
+            // approaching head-on from stopping at the edge instead of routing on.
+            return desiredMove +
+                   normal * (proximity * AvoidWeight) +
+                   tangent * (proximity * AvoidTurnWeight);
+        }
+
+        public static Vector3 RedirectVelocityFromBounds(
+            Vector3 position,
+            Vector3 planarVelocity,
+            Bounds bounds,
+            float turnBias = 1f)
+        {
+            float speed = planarVelocity.magnitude;
+            if (speed < 0.0001f)
+            {
+                return planarVelocity;
+            }
+
+            float minX = bounds.min.x - EnemyClearance;
+            float maxX = bounds.max.x + EnemyClearance;
+            float minZ = bounds.min.z - EnemyClearance;
+            float maxZ = bounds.max.z + EnemyClearance;
+            bool inside = position.x >= minX && position.x <= maxX &&
+                          position.z >= minZ && position.z <= maxZ;
+
+            Vector3 normal;
+            if (inside)
+            {
+                normal = NearestExitDirection(position, minX, maxX, minZ, maxZ);
+                if (Vector3.Dot(planarVelocity, normal) > 0f)
+                {
+                    return planarVelocity;
+                }
+            }
+            else if (!TryGetEntryNormal(
+                         position,
+                         planarVelocity * VelocityLookAhead,
+                         minX,
+                         maxX,
+                         minZ,
+                         maxZ,
+                         out normal))
+            {
+                return planarVelocity;
+            }
+
+            Vector3 tangent = ChooseTangent(normal, position, bounds.center, turnBias);
+            Vector3 redirected = (normal * RedirectOutwardWeight + tangent).normalized;
+            return redirected * speed;
+        }
+
+        private static Vector3 ChooseTangent(
+            Vector3 normal,
+            Vector3 position,
+            Vector3 boundsCenter,
+            float turnBias)
+        {
             Vector3 tangent = new(-normal.z, 0f, normal.x);
-            Vector3 centreOffset = position - bounds.center;
-            float side = Vector3.Dot(centreOffset, tangent);
+            float side = Vector3.Dot(position - boundsCenter, tangent);
             if (Mathf.Abs(side) < 0.05f)
             {
                 side = turnBias;
@@ -168,11 +258,81 @@ namespace PolarityProtocol.Combat
                 tangent = -tangent;
             }
 
-            // The normal keeps the capsule clear; the tangent prevents a robot
-            // approaching head-on from stopping at the edge instead of routing on.
-            return desiredMove +
-                   normal * (proximity * AvoidWeight) +
-                   tangent * (proximity * AvoidTurnWeight);
+            return tangent;
+        }
+
+        private static bool TryGetEntryNormal(
+            Vector3 position,
+            Vector3 travel,
+            float minX,
+            float maxX,
+            float minZ,
+            float maxZ,
+            out Vector3 entryNormal)
+        {
+            float enter = 0f;
+            float exit = 1f;
+            entryNormal = Vector3.zero;
+
+            if (!UpdateSegmentInterval(
+                    position.x,
+                    travel.x,
+                    minX,
+                    maxX,
+                    Vector3.left,
+                    Vector3.right,
+                    ref enter,
+                    ref exit,
+                    ref entryNormal) ||
+                !UpdateSegmentInterval(
+                    position.z,
+                    travel.z,
+                    minZ,
+                    maxZ,
+                    Vector3.back,
+                    Vector3.forward,
+                    ref enter,
+                    ref exit,
+                    ref entryNormal))
+            {
+                return false;
+            }
+
+            return entryNormal != Vector3.zero && enter <= 1f && exit >= 0f;
+        }
+
+        private static bool UpdateSegmentInterval(
+            float origin,
+            float travel,
+            float minimum,
+            float maximum,
+            Vector3 minimumNormal,
+            Vector3 maximumNormal,
+            ref float enter,
+            ref float exit,
+            ref Vector3 entryNormal)
+        {
+            if (Mathf.Abs(travel) < 0.0001f)
+            {
+                return origin >= minimum && origin <= maximum;
+            }
+
+            float near = (minimum - origin) / travel;
+            float far = (maximum - origin) / travel;
+            Vector3 nearNormal = minimumNormal;
+            if (near > far)
+            {
+                (near, far) = (far, near);
+                nearNormal = maximumNormal;
+            }
+
+            if (near > enter)
+            {
+                enter = near;
+                entryNormal = nearNormal;
+            }
+            exit = Mathf.Min(exit, far);
+            return enter <= exit;
         }
 
         private static Vector3 NearestExitDirection(
@@ -212,6 +372,13 @@ namespace PolarityProtocol.Combat
             Health health = other.GetComponentInParent<Health>();
             if (health == null || health.IsDead)
             {
+                return;
+            }
+
+            IHazardDamageGate damageGate = health.GetComponent<IHazardDamageGate>();
+            if (damageGate != null && !damageGate.CanTakeHazardDamage)
+            {
+                nextDamageTime.Remove(health);
                 return;
             }
 

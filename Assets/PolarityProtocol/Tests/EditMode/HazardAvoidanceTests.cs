@@ -51,11 +51,38 @@ namespace PolarityProtocol.Tests
         }
 
         [Test]
+        public void RedirectVelocity_TurnsInwardMomentumBeforeHazardEdge()
+        {
+            Vector3 redirected = Hazard.RedirectVelocityFromBounds(
+                new Vector3(-4f, 0f, 0f),
+                Vector3.right * 6f,
+                HazardBounds,
+                1f);
+
+            Assert.That(redirected.x, Is.LessThan(0f));
+            Assert.That(Mathf.Abs(redirected.z), Is.GreaterThan(1f));
+            Assert.That(redirected.magnitude, Is.EqualTo(6f).Within(0.001f));
+        }
+
+        [Test]
+        public void RedirectVelocity_DoesNotAlterOutwardMomentum()
+        {
+            Vector3 velocity = Vector3.left * 6f;
+            Vector3 redirected = Hazard.RedirectVelocityFromBounds(
+                new Vector3(-4f, 0f, 0f),
+                velocity,
+                HazardBounds,
+                1f);
+
+            Assert.That(redirected, Is.EqualTo(velocity));
+        }
+
+        [Test]
         public void ResolveSafeSpawn_MovesAuthoredPointOutsideHazardClearance()
         {
             Vector3 safePosition = Hazard.ResolveSafeSpawn(Vector3.zero, HazardBounds);
 
-            Assert.That(safePosition.x, Is.LessThan(-2.8f));
+            Assert.That(safePosition.x, Is.LessThan(-3.1f));
             Assert.That(safePosition.z, Is.EqualTo(0f));
         }
     }

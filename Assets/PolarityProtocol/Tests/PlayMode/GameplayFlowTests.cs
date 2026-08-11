@@ -191,6 +191,57 @@ namespace PolarityProtocol.Tests
         }
 
         [UnityTest]
+        public IEnumerator Enemy_HazardDamageRequiresRecentMagneticForce()
+        {
+            GameObject hazardObject = new("Test Plasma");
+            BoxCollider trigger = hazardObject.AddComponent<BoxCollider>();
+            trigger.isTrigger = true;
+            trigger.size = new Vector3(4f, 2f, 4f);
+            hazardObject.AddComponent<Hazard>();
+
+            GameObject unit = new("Chaser Unit");
+            CapsuleCollider unitCollider = unit.AddComponent<CapsuleCollider>();
+            unitCollider.height = 2.2f;
+            unitCollider.radius = 0.55f;
+            Rigidbody body = unit.AddComponent<Rigidbody>();
+            body.isKinematic = true;
+            Health health = unit.AddComponent<Health>();
+            EnemyBrain brain = unit.AddComponent<EnemyBrain>();
+
+            EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
+            definition.Configure(EnemyArchetype.Chaser, 65f, 6.2f, 2.3f, 18f, 1.7f, Color.red);
+            brain.Configure(
+                definition,
+                null,
+                new Renderer[0],
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
+
+            Physics.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(health.Current, Is.EqualTo(health.Maximum));
+
+            brain.NotifyMagneticForce(40f, MagneticPolarity.Negative);
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(health.Current, Is.LessThan(health.Maximum));
+
+            Object.Destroy(hazardObject);
+            Object.Destroy(unit);
+            Object.Destroy(definition);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator ProjectilePool_ReusesReleasedProjectile()
         {
             GameObject poolObject = new("Projectile Pool");

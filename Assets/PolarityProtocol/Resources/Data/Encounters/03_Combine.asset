@@ -18,7 +18,7 @@ MonoBehaviour:
   - archetype: 2
     position: {x: 0, y: 1, z: 10}
   - archetype: 1
-    position: {x: -13, y: 1, z: 5}
+    position: {x: -14, y: 1, z: 7}
   - archetype: 1
     position: {x: 13, y: 1, z: 4}
   - archetype: 0

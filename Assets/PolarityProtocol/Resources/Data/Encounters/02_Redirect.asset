@@ -19,6 +19,6 @@ MonoBehaviour:
   - archetype: 1
     position: {x: -12, y: 1, z: 9}
   - archetype: 1
-    position: {x: 12, y: 1, z: 7}
+    position: {x: 14, y: 1, z: 4}
   - archetype: 0
     position: {x: 1, y: 1, z: 8}

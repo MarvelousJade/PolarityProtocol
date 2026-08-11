@@ -45,6 +45,7 @@ namespace PolarityProtocol.AI
         private float stateEndsAt;
         private float shieldExposedUntil;
         private float magnetHeldUntil;
+        private float hazardTurnBias;
         private float flashEndsAt;
         private Vector3 desiredMove;
         private bool configured;
@@ -130,18 +131,25 @@ namespace PolarityProtocol.AI
                 return;
             }
 
-            // Enemies route around plasma on their own, but a magnet dragging them
-            // overrides that -- otherwise they could never be pushed into a hazard.
-            Vector3 steer = Time.time < magnetHeldUntil
-                ? desiredMove
-                : Hazard.SteerAway(transform.position, desiredMove);
-
             Vector3 planarVelocity = Vector3.ProjectOnPlane(body.linearVelocity, Vector3.up);
-            Vector3 desiredVelocity = steer * definition.MovementSpeed;
-            Vector3 velocityDelta = Vector3.ClampMagnitude(
-                desiredVelocity - planarVelocity,
-                definition.Acceleration * Time.fixedDeltaTime);
-            body.AddForce(velocityDelta, ForceMode.VelocityChange);
+            bool magneticallyDisplaced = Time.time < magnetHeldUntil;
+
+            // Normal locomotion routes around the expanded plasma bounds. While a
+            // magnet has hold of the unit, suspend the motor instead of letting its
+            // own pursuit movement carry it into the hazard; only field force and
+            // existing momentum can move it there.
+            if (!magneticallyDisplaced)
+            {
+                Vector3 steer = Hazard.SteerAway(
+                    transform.position,
+                    desiredMove,
+                    hazardTurnBias);
+                Vector3 desiredVelocity = steer * definition.MovementSpeed;
+                Vector3 velocityDelta = Vector3.ClampMagnitude(
+                    desiredVelocity - planarVelocity,
+                    definition.Acceleration * Time.fixedDeltaTime);
+                body.AddForce(velocityDelta, ForceMode.VelocityChange);
+            }
 
             if (planarVelocity.magnitude > definition.MovementSpeed * 1.6f)
             {
@@ -201,6 +209,7 @@ namespace PolarityProtocol.AI
             health.Damaged += OnDamaged;
             health.Died += OnDied;
             nextAttackTime = Time.time + 0.8f;
+            hazardTurnBias = (GetEntityId().GetHashCode() & 1) == 0 ? 1f : -1f;
             configured = true;
             SetState(EnemyState.Acquiring);
         }

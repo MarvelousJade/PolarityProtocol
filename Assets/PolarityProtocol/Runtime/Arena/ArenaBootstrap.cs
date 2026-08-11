@@ -589,7 +589,7 @@ namespace PolarityProtocol.Arena
             EncounterDefinition second = ScriptableObject.CreateInstance<EncounterDefinition>();
             second.Configure(
                 "ENCOUNTER 02 // REDIRECT",
-                "Curve violet projectiles through an anchor field and return them to a robot.",
+                "Use the opposite-colour anchor to curve red and blue projectiles back at a robot.",
                 new[]
                 {
                     new EncounterDefinition.Spawn(EnemyArchetype.Shooter, new Vector3(-12f, 1f, 9f)),

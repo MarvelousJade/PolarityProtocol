@@ -4,6 +4,7 @@ using System.Linq;
 using PolarityProtocol.Combat;
 using PolarityProtocol.Data;
 using PolarityProtocol.Encounters;
+using PolarityProtocol.Magnetics;
 using PolarityProtocol.Utilities;
 using Unity.Profiling;
 using UnityEngine;
@@ -125,13 +126,20 @@ namespace PolarityProtocol.Arena
                     1.5f + (i % 5) * 0.32f,
                     Mathf.Cos(angle) * 7f);
                 Vector3 tangent = new(Mathf.Cos(angle), 0.05f, -Mathf.Sin(angle));
+                MagneticPolarity polarity = i % 2 == 0
+                    ? MagneticPolarity.Negative
+                    : MagneticPolarity.Positive;
+                Color projectileColor = polarity == MagneticPolarity.Negative
+                    ? RuntimeArt.Pull
+                    : RuntimeArt.Push;
                 ProjectilePool.Active.Spawn(
                     CombatFaction.Enemy,
                     null,
                     position,
                     tangent * (9f + i % 4),
                     1f,
-                    new Color(0.72f, 0.35f, 1f));
+                    projectileColor,
+                    polarity);
             }
         }
 

@@ -9,7 +9,7 @@ Built with Unity `6000.4.11f1` and C#. The playable Windows development build is
 - Place up to two persistent magnetic anchors on arena surfaces.
 - Use a negative anchor to **pull** positive magnetic targets.
 - Use a positive anchor to **push** positive magnetic targets.
-- Redirect shooter projectiles by bending them through a player-owned field.
+- Redirect red and blue shooter projectiles by bending them through an opposite-polarity field.
 - Displace shield units to expose them for three seconds.
 - Push enemies into pulsing plasma hazards.
 - Clear three escalating encounters and earn a score based on time, damage, and redirections.
@@ -24,7 +24,7 @@ The demo has an intro screen, tutorial objectives, pause/restart flow, failure r
 | Aim / orbit | Mouse | Right stick |
 | Fire | Left mouse | `RB` or `A` |
 | Place anchor | Right mouse | `LB` |
-| Toggle pull/push | `Q` | `X` |
+| Toggle polarity | `Q` | `X` |
 | Recall anchors | `R` | `Y` |
 | Dash | `Space` | `B` |
 | Sprint | `Shift` | Left stick press |

@@ -34,11 +34,12 @@ namespace PolarityProtocol.Combat
             Vector3 position,
             Vector3 velocity,
             float damage,
-            Color color)
+            Color color,
+            MagneticPolarity polarity = MagneticPolarity.Positive)
         {
             Projectile projectile = pool.Get();
             ActiveCount++;
-            projectile.Launch(this, faction, owner, position, velocity, damage, color);
+            projectile.Launch(this, faction, owner, position, velocity, damage, color, polarity);
             return projectile;
         }
 

@@ -62,8 +62,11 @@ namespace PolarityProtocol.Magnetics
             LastAffectedTime = Time.time;
             enemy?.NotifyMagneticForce(applied.magnitude, anchorPolarity);
 
-            if (projectile != null && anchorOwner != null)
+            projectile ??= GetComponent<Projectile>();
+            if (projectile != null && anchorOwner != null && anchorPolarity != polarity)
             {
+                // Only an opposite-polarity (attracting) field captures a hostile
+                // projectile. Matching fields still repel it without changing ownership.
                 projectile.RedirectByPlayer(anchorOwner);
             }
         }

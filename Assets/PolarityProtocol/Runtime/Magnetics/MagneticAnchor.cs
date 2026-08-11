@@ -61,7 +61,9 @@ namespace PolarityProtocol.Magnetics
                 definition.Radius,
                 overlapResults,
                 ~0,
-                QueryTriggerInteraction.Ignore);
+                // Projectile hitboxes are triggers, so the field must include triggers
+                // or hostile rounds never receive magnetic force.
+                QueryTriggerInteraction.Collide);
 
             affectedThisStep.Clear();
             int lineIndex = 0;

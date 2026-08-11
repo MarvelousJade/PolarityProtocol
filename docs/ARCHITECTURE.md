@@ -42,7 +42,7 @@ The solver follows:
 4. Attract opposite polarities and repel matching polarities.
 5. Return a force vector without changing scene state.
 
-All demo targets have positive polarity, making negative anchors pull and positive anchors push.
+Most world targets have positive polarity, making negative anchors pull and positive anchors push. Shooter rounds alternate between positive red and negative blue polarity; an opposite-colour anchor attracts and captures them for redirection. After capture, bounded steering turns the round back toward its original shooter so the field deflection resolves into a readable return arc instead of an uncontrolled orbit.
 
 ### Combat
 

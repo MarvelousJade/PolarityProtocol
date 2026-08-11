@@ -156,7 +156,7 @@ namespace PolarityProtocol.UI
             Color polarityColor = ability.SelectedPolarity == Magnetics.MagneticPolarity.Negative
                 ? RuntimeArt.Pull
                 : RuntimeArt.Push;
-            GUI.Label(new Rect(1315f, 875f, 320f, 48f), $"{ability.SelectedPolarity.Verb()} ANCHOR", subtitle);
+            GUI.Label(new Rect(1315f, 875f, 320f, 48f), $"{ability.SelectedPolarity.Label()} ANCHOR", subtitle);
             GUI.Label(
                 new Rect(1650f, 884f, 180f, 30f),
                 $"{ability.ActiveAnchorCount} / 2 ACTIVE",

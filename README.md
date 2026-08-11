@@ -88,7 +88,8 @@ Inside Unity:
 
 1. Use **Tools → Polarity Protocol → Build Demo Project** to regenerate data and both scenes.
 2. Use **Tools → Polarity Protocol → Build Windows Player** to create the executable.
-3. Use **Tools → Polarity Protocol → Encounter Authoring** to edit and validate encounter layouts.
+3. Use **Tools → Polarity Protocol → Build WebGL Player** to create a browser build for itch.io.
+4. Use **Tools → Polarity Protocol → Encounter Authoring** to edit and validate encounter layouts.
 
 For CI or a local PowerShell terminal:
 
@@ -100,7 +101,24 @@ For CI or a local PowerShell terminal:
   -logFile 'G:\C++ PROJECTS\PolarityProtocol\Logs\windows-build.log'
 ```
 
-Build output is ignored by Git because Unity players are large and fully reproducible.
+For a WebGL build:
+
+```powershell
+& 'C:\Program Files\Unity\Hub\Editor\6000.4.11f1\Editor\Unity.exe' `
+  -batchmode -quit `
+  -projectPath 'G:\C++ PROJECTS\PolarityProtocol' `
+  -executeMethod PolarityProtocol.Editor.ProjectBuilder.BuildWebGLPlayer `
+  -logFile 'G:\C++ PROJECTS\PolarityProtocol\Logs\webgl-build.log'
+```
+
+The WebGL builder produces a release player in `Builds/WebGL` with gzip compression and a decompression fallback for static hosts. Zip the directory contents—not the enclosing directory—so `index.html` is at the archive root:
+
+```powershell
+Compress-Archive -Path '.\Builds\WebGL\*' `
+  -DestinationPath '.\Builds\PolarityProtocol-WebGL.zip' -Force
+```
+
+On itch.io, upload the zip as an HTML project and enable **This file will be played in the browser**. Build output is ignored by Git because Unity players are large and fully reproducible.
 
 ## Tests
 

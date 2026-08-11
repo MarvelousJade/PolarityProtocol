@@ -53,13 +53,43 @@ namespace PolarityProtocol.Editor
             if (report.summary.result != BuildResult.Succeeded)
             {
                 throw new BuildFailedException(
-                    $"Polarity Protocol build failed: {report.summary.result} " +
+                    $"Polarity Protocol Windows build failed: {report.summary.result} " +
                     $"({report.summary.totalErrors} errors).");
             }
 
             Debug.Log(
                 $"[Polarity Protocol] Windows player built at {executablePath} " +
                 $"({report.summary.totalSize / (1024f * 1024f):0.0} MiB).");
+        }
+
+        [MenuItem("Tools/Polarity Protocol/Build WebGL Player", priority = 3)]
+        public static void BuildWebGLPlayer()
+        {
+            BuildDemoProject();
+
+            string buildDirectory = Path.GetFullPath("Builds/WebGL");
+            Directory.CreateDirectory(buildDirectory);
+
+            BuildPlayerOptions options = new()
+            {
+                scenes = new[] { DemoScenePath },
+                locationPathName = buildDirectory,
+                target = BuildTarget.WebGL,
+                options = BuildOptions.None
+            };
+
+            BuildReport report = BuildPipeline.BuildPlayer(options);
+            if (report.summary.result != BuildResult.Succeeded)
+            {
+                throw new BuildFailedException(
+                    $"Polarity Protocol WebGL build failed: {report.summary.result} " +
+                    $"({report.summary.totalErrors} errors).");
+            }
+
+            Debug.Log(
+                $"[Polarity Protocol] WebGL player built at {buildDirectory} " +
+                $"({report.summary.totalSize / (1024f * 1024f):0.0} MiB). " +
+                "Zip the directory contents so index.html is at the archive root for itch.io.");
         }
 
         public static void BuildAll()
@@ -219,6 +249,11 @@ namespace PolarityProtocol.Editor
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);
             PlayerSettings.SetApiCompatibilityLevel(NamedBuildTarget.Standalone, ApiCompatibilityLevel.NET_Standard);
+            PlayerSettings.SetScriptingBackend(NamedBuildTarget.WebGL, ScriptingImplementation.IL2CPP);
+            PlayerSettings.SetApiCompatibilityLevel(NamedBuildTarget.WebGL, ApiCompatibilityLevel.NET_Standard);
+            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
+            PlayerSettings.WebGL.decompressionFallback = true;
+            PlayerSettings.WebGL.dataCaching = true;
 
             EnsureAlwaysIncludedShaders("Standard", "Sprites/Default", "Legacy Shaders/Diffuse");
             AddInputAxis("Right Stick Horizontal", 3, false);

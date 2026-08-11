@@ -60,13 +60,23 @@ namespace PolarityProtocol.Encounters
 
                 yield return new WaitForSeconds(1.1f);
 
+                // Randomise which colour leads each wave, then alternate so every
+                // multi-enemy encounter always contains both magnetic polarities.
+                MagneticPolarity nextPolarity = Random.value < 0.5f
+                    ? MagneticPolarity.Negative
+                    : MagneticPolarity.Positive;
                 for (int spawnIndex = 0; spawnIndex < encounter.Spawns.Length; spawnIndex++)
                 {
                     EncounterDefinition.Spawn spawn = encounter.Spawns[spawnIndex];
                     EnemyDefinition definition = FindDefinition(spawn.archetype);
                     if (definition != null)
                     {
-                        EnemyBrain enemy = EnemyFactory.Create(definition, player, spawn.position);
+                        EnemyBrain enemy = EnemyFactory.Create(
+                            definition,
+                            player,
+                            spawn.position,
+                            nextPolarity);
+                        nextPolarity = nextPolarity.Opposite();
                         livingEnemies.Add(enemy.Health);
                         enemy.Health.Died += OnEnemyDied;
                     }
@@ -119,7 +129,22 @@ namespace PolarityProtocol.Encounters
     {
         public static EnemyBrain Create(EnemyDefinition definition, Transform player, Vector3 position)
         {
-            GameObject root = new($"{definition.Archetype} Unit");
+            MagneticPolarity polarity = Random.value < 0.5f
+                ? MagneticPolarity.Negative
+                : MagneticPolarity.Positive;
+            return Create(definition, player, position, polarity);
+        }
+
+        public static EnemyBrain Create(
+            EnemyDefinition definition,
+            Transform player,
+            Vector3 position,
+            MagneticPolarity polarity)
+        {
+            Color polarityColor = polarity == MagneticPolarity.Negative
+                ? RuntimeArt.Pull
+                : RuntimeArt.Push;
+            GameObject root = new($"{polarity.Label()} {definition.Archetype} Unit");
             root.transform.position = Hazard.ResolveSafeSpawn(position);
 
             CapsuleCollider collider = root.AddComponent<CapsuleCollider>();
@@ -142,7 +167,7 @@ namespace PolarityProtocol.Encounters
             bool shieldUnit = definition.Archetype == EnemyArchetype.Shield;
             // The shield robot braces against anchors -- only its plate answers the
             // field. Every other archetype can be dragged freely.
-            magneticTarget.Configure(definition.Polarity, 1f, shieldUnit);
+            magneticTarget.Configure(polarity, 1f, shieldUnit);
 
             Transform model = new GameObject("Robot Model").transform;
             model.SetParent(root.transform, false);
@@ -154,7 +179,7 @@ namespace PolarityProtocol.Encounters
                 model,
                 new Vector3(0f, 1.05f, 0f),
                 new Vector3(0.68f, 0.72f, 0.68f),
-                definition.Accent,
+                polarityColor,
                 false,
                 0.55f);
             renderers.Add(torso.GetComponent<Renderer>());
@@ -164,13 +189,9 @@ namespace PolarityProtocol.Encounters
                 model,
                 new Vector3(0f, 1.08f, 0.48f),
                 new Vector3(0.78f, 0.58f, 0.14f),
-                shieldUnit
-                    ? RuntimeArt.Slate
-                    : definition.Polarity == MagneticPolarity.Negative
-                        ? RuntimeArt.Pull
-                        : RuntimeArt.Push,
+                polarityColor,
                 false,
-                shieldUnit ? 0.1f : 0.7f);
+                0.7f);
 
             GameObject head = RuntimeArt.Primitive(
                 PrimitiveType.Cube,
@@ -178,7 +199,7 @@ namespace PolarityProtocol.Encounters
                 model,
                 new Vector3(0f, 1.93f, 0.06f),
                 new Vector3(0.82f, 0.5f, 0.72f),
-                definition.Accent,
+                polarityColor,
                 false,
                 0.45f);
             renderers.Add(head.GetComponent<Renderer>());
@@ -218,7 +239,7 @@ namespace PolarityProtocol.Encounters
                     model,
                     new Vector3(0.68f, 1.32f, 0.35f),
                     new Vector3(0.2f, 0.42f, 0.2f),
-                    definition.Accent,
+                    polarityColor,
                     false,
                     1.1f);
                 cannon.transform.localEulerAngles = new Vector3(90f, 0f, 0f);
@@ -233,7 +254,7 @@ namespace PolarityProtocol.Encounters
                         model,
                         new Vector3(side * 0.68f, 1.05f, 0.38f),
                         new Vector3(0.13f, 0.6f, 0.16f),
-                        definition.Accent,
+                        polarityColor,
                         false,
                         0.8f);
                     blade.transform.localEulerAngles = new Vector3(35f, 0f, side * 18f);
@@ -249,7 +270,7 @@ namespace PolarityProtocol.Encounters
                     model,
                     new Vector3(0f, 1.15f, 0.78f),
                     new Vector3(1.5f, 1.8f, 0.12f),
-                    RuntimeArt.Gold,
+                    polarityColor,
                     false,
                     1.2f);
                 shield = shieldObject.transform;
@@ -281,11 +302,11 @@ namespace PolarityProtocol.Encounters
                 healthBarRoot,
                 new Vector3(0f, 0f, -0.025f),
                 new Vector3(1.08f, 0.065f, 0.035f),
-                definition.Accent,
+                polarityColor,
                 false,
                 1.2f);
 
-            LineRenderer attackRing = RuntimeArt.Ring(root.transform, definition.AttackRange, RuntimeArt.Push, 0.035f, 48);
+            LineRenderer attackRing = RuntimeArt.Ring(root.transform, definition.AttackRange, polarityColor, 0.035f, 48);
             LineRenderer sightRing = RuntimeArt.Ring(root.transform, definition.PerceptionRange, new Color(1f, 1f, 1f, 0.22f), 0.018f, 72);
             attackRing.gameObject.SetActive(false);
             sightRing.gameObject.SetActive(false);
@@ -300,12 +321,15 @@ namespace PolarityProtocol.Encounters
                 aimLine.positionCount = 2;
                 aimLine.startWidth = 0.045f;
                 aimLine.endWidth = 0.012f;
+                // The loaded projectile alternates red/blue independently of the unit,
+                // so a neutral material lets the per-shot line colours read correctly.
                 aimLine.sharedMaterial = RuntimeArt.Material(Color.white, 1.2f, true);
                 aimObject.SetActive(false);
             }
 
             brain.Configure(
                 definition,
+                polarity,
                 player,
                 renderers.ToArray(),
                 model,

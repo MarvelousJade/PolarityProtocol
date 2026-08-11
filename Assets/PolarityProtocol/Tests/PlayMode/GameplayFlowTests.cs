@@ -204,10 +204,10 @@ namespace PolarityProtocol.Tests
                 2.6f,
                 24f,
                 2.3f,
-                MagneticPolarity.Positive,
                 Color.yellow);
             brain.Configure(
                 definition,
+                MagneticPolarity.Positive,
                 null,
                 new Renderer[0],
                 null,
@@ -299,10 +299,10 @@ namespace PolarityProtocol.Tests
                 18f,
                 14f,
                 2.2f,
-                MagneticPolarity.Positive,
                 Color.magenta);
             brain.Configure(
                 definition,
+                MagneticPolarity.Positive,
                 player.transform,
                 new Renderer[0],
                 null,
@@ -353,10 +353,10 @@ namespace PolarityProtocol.Tests
                 2.3f,
                 18f,
                 1.7f,
-                MagneticPolarity.Negative,
                 Color.red);
             brain.Configure(
                 definition,
+                MagneticPolarity.Negative,
                 null,
                 new Renderer[0],
                 null,
@@ -387,7 +387,7 @@ namespace PolarityProtocol.Tests
         }
 
         [UnityTest]
-        public IEnumerator BlueEnemy_IsSpawnedWithNegativePolarityAndPulledByRed()
+        public IEnumerator EnemyFactory_SpawnsBothPolarityColoursWithMatchingForces()
         {
             GameObject player = new("Player");
             EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
@@ -398,24 +398,51 @@ namespace PolarityProtocol.Tests
                 2.3f,
                 18f,
                 1.7f,
-                MagneticPolarity.Negative,
-                Color.cyan);
+                Color.white);
 
-            EnemyBrain enemy = EnemyFactory.Create(definition, player.transform, Vector3.right * 3f);
-            MagneticTarget target = enemy.GetComponent<MagneticTarget>();
-            Vector3 force = MagneticForceSolver.Calculate(
+            EnemyBrain blueEnemy = EnemyFactory.Create(
+                definition,
+                player.transform,
+                Vector3.right * 3f,
+                MagneticPolarity.Negative);
+            EnemyBrain redEnemy = EnemyFactory.Create(
+                definition,
+                player.transform,
+                Vector3.left * 3f,
+                MagneticPolarity.Positive);
+            MagneticTarget blueTarget = blueEnemy.GetComponent<MagneticTarget>();
+            MagneticTarget redTarget = redEnemy.GetComponent<MagneticTarget>();
+            Color blueBody = blueEnemy.transform.Find("Robot Model/Torso")
+                .GetComponent<Renderer>().material.color;
+            Color redBody = redEnemy.transform.Find("Robot Model/Torso")
+                .GetComponent<Renderer>().material.color;
+
+            Vector3 redToBlueForce = MagneticForceSolver.Calculate(
                 Vector3.zero,
-                enemy.transform.position,
+                blueEnemy.transform.position,
                 MagneticPolarity.Positive,
-                target.Polarity,
+                blueTarget.Polarity,
+                40f,
+                8f,
+                0.5f);
+            Vector3 blueToRedForce = MagneticForceSolver.Calculate(
+                Vector3.zero,
+                redEnemy.transform.position,
+                MagneticPolarity.Negative,
+                redTarget.Polarity,
                 40f,
                 8f,
                 0.5f);
 
-            Assert.That(target.Polarity, Is.EqualTo(MagneticPolarity.Negative));
-            Assert.That(force.x, Is.LessThan(0f), "The red positive anchor should pull a blue negative enemy.");
+            Assert.That(blueTarget.Polarity, Is.EqualTo(MagneticPolarity.Negative));
+            Assert.That(redTarget.Polarity, Is.EqualTo(MagneticPolarity.Positive));
+            Assert.That(Vector4.Distance(blueBody, RuntimeArt.Pull), Is.LessThan(0.001f));
+            Assert.That(Vector4.Distance(redBody, RuntimeArt.Push), Is.LessThan(0.001f));
+            Assert.That(redToBlueForce.x, Is.LessThan(0f));
+            Assert.That(blueToRedForce.x, Is.GreaterThan(0f));
 
-            Object.Destroy(enemy.gameObject);
+            Object.Destroy(blueEnemy.gameObject);
+            Object.Destroy(redEnemy.gameObject);
             Object.Destroy(player);
             Object.Destroy(definition);
             yield return null;

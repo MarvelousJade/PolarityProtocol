@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using PolarityProtocol.Arena;
 using PolarityProtocol.Data;
-using PolarityProtocol.Magnetics;
 using PolarityProtocol.Utilities;
 using UnityEditor;
 using UnityEditor.Build;
@@ -126,8 +125,7 @@ namespace PolarityProtocol.Editor
                 2.3f,
                 18f,
                 1.7f,
-                MagneticPolarity.Negative,
-                RuntimeArt.Pull);
+                RuntimeArt.Push);
             CreateEnemy(
                 "Shooter",
                 EnemyArchetype.Shooter,
@@ -136,7 +134,6 @@ namespace PolarityProtocol.Editor
                 18f,
                 14f,
                 2.2f,
-                MagneticPolarity.Positive,
                 new Color(0.72f, 0.35f, 1f));
             CreateEnemy(
                 "Shield",
@@ -146,7 +143,6 @@ namespace PolarityProtocol.Editor
                 2.6f,
                 24f,
                 2.3f,
-                MagneticPolarity.Positive,
                 RuntimeArt.Gold);
         }
 
@@ -158,12 +154,11 @@ namespace PolarityProtocol.Editor
             float range,
             float damage,
             float cooldown,
-            MagneticPolarity polarity,
             Color accent)
         {
             EnemyDefinition enemy = LoadOrCreate<EnemyDefinition>(
                 $"{DataRoot}/Enemies/{assetName}.asset");
-            enemy.Configure(kind, health, speed, range, damage, cooldown, polarity, accent);
+            enemy.Configure(kind, health, speed, range, damage, cooldown, accent);
             EditorUtility.SetDirty(enemy);
         }
 
@@ -172,7 +167,7 @@ namespace PolarityProtocol.Editor
             CreateEncounter(
                 "01_LearnTheForce",
                 "ENCOUNTER 01 // LEARN THE FORCE",
-                "Use a RED anchor to PULL blue chasers. Use BLUE to PUSH them into plasma.",
+                "Use the OPPOSITE colour to PULL robots. MATCH their colour to PUSH them into plasma.",
                 new[]
                 {
                     new EncounterDefinition.Spawn(EnemyArchetype.Chaser, new Vector3(-7f, 1f, 3f)),

@@ -127,7 +127,7 @@ namespace PolarityProtocol.Editor
                 EncounterDefinition.Spawn spawn = spawns[i];
                 Color color = spawn.archetype switch
                 {
-                    EnemyArchetype.Chaser => RuntimeArt.Pull,
+                    EnemyArchetype.Chaser => RuntimeArt.Push,
                     EnemyArchetype.Shooter => new Color(0.72f, 0.35f, 1f),
                     _ => RuntimeArt.Gold
                 };

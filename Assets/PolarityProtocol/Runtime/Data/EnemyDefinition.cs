@@ -1,4 +1,3 @@
-using PolarityProtocol.Magnetics;
 using UnityEngine;
 
 namespace PolarityProtocol.Data
@@ -24,7 +23,6 @@ namespace PolarityProtocol.Data
         [SerializeField, Min(1f)] private float perceptionRange = 30f;
         [SerializeField, Min(0f)] private float preferredRange = 12f;
         [SerializeField, Min(0f)] private float projectileSpeed = 13f;
-        [SerializeField] private MagneticPolarity magneticPolarity = MagneticPolarity.Positive;
         [SerializeField] private Color accent = Color.red;
 
         public EnemyArchetype Archetype => archetype;
@@ -38,7 +36,6 @@ namespace PolarityProtocol.Data
         public float PerceptionRange => perceptionRange;
         public float PreferredRange => preferredRange;
         public float ProjectileSpeed => projectileSpeed;
-        public MagneticPolarity Polarity => magneticPolarity;
         public Color Accent => accent;
 
         public void Configure(
@@ -48,7 +45,6 @@ namespace PolarityProtocol.Data
             float range,
             float damage,
             float cooldown,
-            MagneticPolarity polarity,
             Color color)
         {
             archetype = kind;
@@ -62,7 +58,6 @@ namespace PolarityProtocol.Data
             perceptionRange = 35f;
             preferredRange = kind == EnemyArchetype.Shooter ? 12f : range * 0.75f;
             projectileSpeed = 14f;
-            magneticPolarity = polarity;
             accent = color;
         }
     }

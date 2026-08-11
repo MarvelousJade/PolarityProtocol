@@ -82,7 +82,7 @@ namespace PolarityProtocol.Tests
         {
             Vector3 safePosition = Hazard.ResolveSafeSpawn(Vector3.zero, HazardBounds);
 
-            Assert.That(safePosition.x, Is.LessThan(-3.1f));
+            Assert.That(safePosition.x, Is.LessThan(-3.35f));
             Assert.That(safePosition.z, Is.EqualTo(0f));
         }
     }

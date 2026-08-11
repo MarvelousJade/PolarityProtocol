@@ -142,8 +142,14 @@ namespace PolarityProtocol.AI
             // existing momentum can move it there.
             if (!magneticallyDisplaced)
             {
+                Vector3 navigationPosition = Hazard.ResolveSafePosition(transform.position);
+                if ((navigationPosition - transform.position).sqrMagnitude > 0.0001f)
+                {
+                    body.position = navigationPosition;
+                }
+
                 Vector3 steer = Hazard.SteerAway(
-                    transform.position,
+                    navigationPosition,
                     desiredMove,
                     hazardTurnBias);
                 Vector3 desiredVelocity = steer * definition.MovementSpeed;
@@ -152,7 +158,7 @@ namespace PolarityProtocol.AI
                     definition.Acceleration * Time.fixedDeltaTime);
                 Vector3 motorPlanarVelocity = planarVelocity + velocityDelta;
                 Vector3 safePlanarVelocity = Hazard.RedirectVelocity(
-                    transform.position,
+                    navigationPosition,
                     motorPlanarVelocity,
                     hazardTurnBias);
                 body.linearVelocity = new Vector3(
@@ -251,7 +257,7 @@ namespace PolarityProtocol.AI
             }
             else
             {
-                magnetHeldUntil = Time.time + 0.35f;
+                magnetHeldUntil = Time.time + 0.8f;
             }
 
             if (State != EnemyState.Dead && State != EnemyState.Telegraphing)

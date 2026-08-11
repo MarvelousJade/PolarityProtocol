@@ -44,7 +44,7 @@ The demo has an intro screen, tutorial objectives, pause/restart flow, failure r
 - Runtime force vectors, AI states, targeting ranges, active counts, and frame-rate diagnostics
 - Encounter authoring window with draggable spawn handles, range preview, and bounds/separation validation
 - Dedicated stress scene and packaged-player benchmark mode
-- Twelve Edit Mode tests and seven Play Mode tests
+- Twelve Edit Mode tests and nine Play Mode tests
 
 ## Project layout
 
@@ -121,7 +121,7 @@ Run the suites from Unity Test Runner, or use:
 Verified locally:
 
 - Edit Mode: **12/12 passed**
-- Play Mode: **7/7 passed**
+- Play Mode: **9/9 passed**
 - Windows x64 development player: **build succeeded**
 - Packaged-player smoke run: **no runtime exceptions**
 
@@ -131,10 +131,10 @@ The reproducible stress workload adds 18 robots and 120 projectiles to the openi
 
 - 21 peak enemies
 - 120 peak projectiles
-- 118.1 average FPS / 8.47 ms average frame
-- 8.31 ms sampled main-thread time
+- 112.6 average FPS / 8.88 ms average frame
+- 8.32 ms sampled main-thread time
 - 146.0 MB sampled used memory
-- Gen-0 collections reduced from 17 to 4 after pooling synthesized feedback clips and removing diagnostic array queries
+- Gen-0 collections reduced from 17 to 3 after pooling synthesized feedback clips and removing diagnostic array queries
 
 Full methodology and caveats are in [Performance](docs/PERFORMANCE.md).
 

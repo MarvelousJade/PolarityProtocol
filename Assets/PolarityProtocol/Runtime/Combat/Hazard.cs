@@ -6,17 +6,18 @@ namespace PolarityProtocol.Combat
     [RequireComponent(typeof(Collider))]
     public sealed class Hazard : MonoBehaviour
     {
-        // The enemy capsule has a 0.55 m radius. Keeping its centre this far
-        // outside the trigger prevents an apparently safe robot from overlapping
-        // the plasma with the edge of its collider.
-        private const float EnemyClearance = 1.1f;
+        // The enemy capsule has a 0.55 m radius. Extra clearance around the full
+        // visual footprint prevents collision momentum from putting its body over
+        // plasma even though the damaging trigger itself is slightly smaller.
+        private const float EnemyClearance = 1.35f;
         private const float AvoidDistance = 2.5f;
         private const float AvoidWeight = 2.8f;
         private const float AvoidTurnWeight = 1.15f;
-        private const float VelocityLookAhead = 0.35f;
+        private const float VelocityLookAhead = 0.5f;
         private const float RedirectOutwardWeight = 0.65f;
 
         [SerializeField] private float damagePerSecond = 90f;
+        [SerializeField] private Vector2 avoidanceFootprint;
         private readonly Dictionary<Health, float> nextDamageTime = new();
         private static readonly List<Hazard> Active = new();
         private Collider zone;
@@ -30,6 +31,33 @@ namespace PolarityProtocol.Combat
         private void OnDisable()
         {
             Active.Remove(this);
+        }
+
+        public void ConfigureAvoidanceFootprint(Vector2 footprint)
+        {
+            avoidanceFootprint = new Vector2(
+                Mathf.Max(0f, footprint.x),
+                Mathf.Max(0f, footprint.y));
+        }
+
+        private Bounds AvoidanceBounds
+        {
+            get
+            {
+                Bounds bounds = zone.bounds;
+                if (avoidanceFootprint.x <= 0f || avoidanceFootprint.y <= 0f)
+                {
+                    return bounds;
+                }
+
+                Vector3 right = transform.TransformVector(Vector3.right * avoidanceFootprint.x);
+                Vector3 forward = transform.TransformVector(Vector3.forward * avoidanceFootprint.y);
+                Vector3 size = bounds.size;
+                size.x = Mathf.Abs(right.x) + Mathf.Abs(forward.x);
+                size.z = Mathf.Abs(right.z) + Mathf.Abs(forward.z);
+                bounds.size = size;
+                return bounds;
+            }
         }
 
         /// <summary>
@@ -52,7 +80,7 @@ namespace PolarityProtocol.Combat
                 steeredMove = SteerAwayFromBounds(
                     position,
                     steeredMove,
-                    activeZone.bounds,
+                    Active[i].AvoidanceBounds,
                     turnBias);
             }
 
@@ -81,7 +109,7 @@ namespace PolarityProtocol.Combat
                 safeVelocity = RedirectVelocityFromBounds(
                     position,
                     safeVelocity,
-                    activeZone.bounds,
+                    Active[i].AvoidanceBounds,
                     turnBias);
             }
 
@@ -95,7 +123,12 @@ namespace PolarityProtocol.Combat
         /// </summary>
         public static Vector3 ResolveSafeSpawn(Vector3 position)
         {
-            const float spawnGap = 0.05f;
+            return ResolveSafePosition(position);
+        }
+
+        public static Vector3 ResolveSafePosition(Vector3 position)
+        {
+            const float safetyGap = 0.05f;
 
             for (int i = 0; i < Active.Count; i++)
             {
@@ -105,7 +138,7 @@ namespace PolarityProtocol.Combat
                     continue;
                 }
 
-                position = ResolveSafeSpawn(position, activeZone.bounds, spawnGap);
+                position = ResolveSafeSpawn(position, Active[i].AvoidanceBounds, safetyGap);
             }
 
             return position;

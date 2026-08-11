@@ -36,19 +36,19 @@ Run it with:
 
 ## Results
 
-| Measurement | Before optimization | After optimization | Hazard-aware AI |
+| Measurement | Before optimization | After optimization | Visual-footprint AI |
 |---|---:|---:|---:|
 | Peak enemies | 21 | 21 | 21 |
 | Peak projectiles | 120 | 120 | 120 |
-| Average frame | 8.45 ms | 8.53 ms | 8.47 ms |
-| Average FPS | 118.3 | 117.2 | 118.1 |
-| Sampled main thread | 8.32 ms | 8.75 ms | 8.31 ms |
-| Worst observed frame | 203.96 ms | 249.00 ms | 229.82 ms |
-| Gen-0 collections | 17 | 4 | 4 |
-| Last-frame GC allocation | 0.16 KB | 0.20 KB | 0.33 KB |
+| Average frame | 8.45 ms | 8.53 ms | 8.88 ms |
+| Average FPS | 118.3 | 117.2 | 112.6 |
+| Sampled main thread | 8.32 ms | 8.75 ms | 8.32 ms |
+| Worst observed frame | 203.96 ms | 249.00 ms | 899.98 ms |
+| Gen-0 collections | 17 | 4 | 3 |
+| Last-frame GC allocation | 0.16 KB | 0.20 KB | 0.20 KB |
 | Sampled used memory | 142.9 MB | 143.2 MB | 146.0 MB |
 
-The average frame differences are within run-to-run variance. The meaningful optimization remains the Gen-0 collection count: **17 → 4**, a **76% reduction**, under the same entity and projectile load. The latest rerun includes expanded hazard steering, Rigidbody velocity look-ahead, and magnetic hazard-damage gating; it retained four Gen-0 collections and comparable frame time.
+The average frame differences are close to normal development-build variance, while sampled main-thread time remains effectively unchanged. The latest run's 899.98 ms worst frame is a startup/warm-up outlier. The meaningful optimization remains the Gen-0 collection count: **17 → 3** in the latest run, an **82% reduction**, under the same entity and projectile load. The latest rerun includes full-visual-footprint hazard steering, Rigidbody velocity look-ahead, autonomous position correction, and magnetic hazard-damage gating.
 
 ## Optimization
 

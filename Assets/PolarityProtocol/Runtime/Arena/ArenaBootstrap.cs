@@ -474,8 +474,9 @@ namespace PolarityProtocol.Arena
             BoxCollider trigger = hazardRoot.AddComponent<BoxCollider>();
             trigger.isTrigger = true;
             trigger.center = new Vector3(0f, 0.75f, 0f);
-            trigger.size = new Vector3(scale.x, 1.7f, scale.z);
-            hazardRoot.AddComponent<Hazard>();
+            trigger.size = new Vector3(scale.x * 0.86f, 1.7f, scale.z * 0.86f);
+            Hazard hazard = hazardRoot.AddComponent<Hazard>();
+            hazard.ConfigureAvoidanceFootprint(new Vector2(scale.x, scale.z));
 
             for (int i = -2; i <= 2; i++)
             {
